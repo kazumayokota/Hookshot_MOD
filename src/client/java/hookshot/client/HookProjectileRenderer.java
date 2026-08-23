@@ -28,7 +28,6 @@ public final class HookProjectileRenderer extends EntityRenderer<HookProjectileE
         matrices.push();
         matrices.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(MathHelper.lerp(tickDelta, entity.prevYaw, entity.getYaw()) - 90.0F));
         matrices.multiply(Vec3f.POSITIVE_Z.getDegreesQuaternion(MathHelper.lerp(tickDelta, entity.prevPitch, entity.getPitch())));
-        matrices.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(45.0F));
         matrices.scale(0.05625F, 0.05625F, 0.05625F);
         matrices.translate(-4.0D, 0.0D, 0.0D);
 
