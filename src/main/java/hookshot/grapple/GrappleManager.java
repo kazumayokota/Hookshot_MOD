@@ -32,6 +32,31 @@ public final class GrappleManager {
         state.setActive(true);
     }
 
+    public static void clear(ServerPlayerEntity player) {
+        GrappleState state = STATES.remove(player.getUuid());
+
+        if (state != null && state.getHookUuid() != null && player.world instanceof ServerWorld serverWorld) {
+            Entity hook = serverWorld.getEntity(state.getHookUuid());
+
+            if (hook instanceof HookProjectileEntity hookProjectile) {
+                hookProjectile.removeImmediately();
+            }
+        }
+
+        if (player.world instanceof ServerWorld serverWorld) {
+            for (Entity entity : serverWorld.iterateEntities()) {
+                if (!(entity instanceof HookProjectileEntity hookProjectile)) {
+                    continue;
+                }
+
+                Entity owner = hookProjectile.getOwner();
+                if (owner != null && owner.getUuid().equals(player.getUuid())) {
+                    hookProjectile.removeImmediately();
+                }
+            }
+        }
+    }
+
     private static void tick(MinecraftServer server) {
         Iterator<Map.Entry<UUID, GrappleState>> iterator = STATES.entrySet().iterator();
 

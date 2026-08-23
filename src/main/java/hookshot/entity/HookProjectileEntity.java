@@ -261,6 +261,10 @@ public final class HookProjectileEntity extends Entity {
         startReturning();
     }
 
+    public void removeImmediately() {
+        removeHook();
+    }
+
     private void startReturning() {
         setHookState(HookState.RETURNING);
         setVelocity(Vec3d.ZERO);
