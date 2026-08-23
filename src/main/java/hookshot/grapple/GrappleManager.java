@@ -81,14 +81,30 @@ public final class GrappleManager {
             return true;
         }
 
-        if (state.getMode() == GrappleMode.PLAYER_PULL
-                && state.getAnchorPosition() != null
-                && PlayerPullBehavior.isCloseEnough(player, state.getAnchorPosition())) {
-            return true;
+        if (state.getMode() == GrappleMode.PLAYER_PULL && state.getAnchorPosition() != null) {
+            if (PlayerPullBehavior.isCloseEnough(player, state.getAnchorPosition())) {
+                return true;
+            }
+
+            if (isLookingAway(player, state.getAnchorPosition())) {
+                return true;
+            }
         }
 
         Entity hook = player.world instanceof ServerWorld serverWorld ? serverWorld.getEntity(state.getHookUuid()) : null;
         return !(hook instanceof HookProjectileEntity) || hook.isRemoved();
+    }
+
+    private static boolean isLookingAway(ServerPlayerEntity player, Vec3d anchorPosition) {
+        Vec3d toAnchor = anchorPosition.subtract(player.getEyePos());
+
+        if (toAnchor.lengthSquared() < 1.0E-7D) {
+            return false;
+        }
+
+        double dot = player.getRotationVec(1.0F).normalize().dotProduct(toAnchor.normalize());
+        double minDot = Math.cos(Math.toRadians(HookshotConfig.GRAPPLE_VIEW_RELEASE_DEGREES));
+        return dot < minDot;
     }
 
     private static void release(ServerPlayerEntity player, GrappleState state) {

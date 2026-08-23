@@ -8,7 +8,6 @@ import java.util.UUID;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.MovementType;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
@@ -113,7 +112,14 @@ public final class HookProjectileEntity extends Entity {
     public void tick() {
         super.tick();
 
-        if (getHookState() != HookState.FLYING) {
+        HookState hookState = getHookState();
+
+        if (hookState == HookState.RETURNING) {
+            tickReturning();
+            return;
+        }
+
+        if (hookState != HookState.FLYING) {
             tickAttached();
             return;
         }
@@ -214,13 +220,46 @@ public final class HookProjectileEntity extends Entity {
         attachedTicks++;
     }
 
+    private void tickReturning() {
+        Entity owner = getOwner();
+
+        if (owner == null) {
+            if (!world.isClient) {
+                removeHook();
+            }
+            return;
+        }
+
+        Vec3d target = owner.getEyePos().subtract(0.0D, 0.25D, 0.0D);
+        Vec3d toOwner = target.subtract(getPos());
+
+        if (toOwner.lengthSquared() <= HookshotConfig.HOOK_RETURN_FINISH_DISTANCE * HookshotConfig.HOOK_RETURN_FINISH_DISTANCE) {
+            if (!world.isClient) {
+                removeHook();
+            }
+            return;
+        }
+
+        Vec3d direction = toOwner.normalize();
+        Vec3d velocity = direction.multiply(HookshotConfig.HOOK_RETURN_SPEED);
+        setAimDirection(direction);
+        setRotationFromDirection(direction);
+        setVelocity(velocity);
+        move(MovementType.SELF, velocity);
+    }
+
     private void removeHook() {
         setHookState(HookState.REMOVED);
         discard();
     }
 
     public void release() {
-        removeHook();
+        if (getHookState() == HookState.REMOVED || getHookState() == HookState.RETURNING) {
+            return;
+        }
+
+        setHookState(HookState.RETURNING);
+        setVelocity(Vec3d.ZERO);
     }
 
     private void setHookState(HookState state) {
