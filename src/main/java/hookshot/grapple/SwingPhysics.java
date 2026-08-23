@@ -24,22 +24,29 @@ public final class SwingPhysics {
             return velocity;
         }
 
+        double distanceScale = getDistanceScale(radialToAnchor.length());
         Vec3d nextVelocity = velocity;
         double sidewaysInput = SwingInputTracker.getSidewaysInput(player);
+        boolean jumpHeld = SwingInputTracker.isJumpHeld(player);
 
         if (Math.abs(sidewaysInput) > INPUT_DEAD_ZONE) {
-            nextVelocity = nextVelocity.add(tangent.multiply(sidewaysInput * HookshotConfig.SIDE_FORCE));
+            nextVelocity = nextVelocity.add(tangent.multiply(sidewaysInput * HookshotConfig.SIDE_FORCE * distanceScale));
         }
 
         if (isLookingTowardAnchor(player, radial)) {
             Vec3d tangentialVelocity = getTangentialVelocity(nextVelocity, radial);
             if (tangentialVelocity.lengthSquared() >= HookshotConfig.SWING_MIN_TANGENTIAL_SPEED * HookshotConfig.SWING_MIN_TANGENTIAL_SPEED) {
-                nextVelocity = nextVelocity.add(tangentialVelocity.normalize().multiply(HookshotConfig.LOOK_SWING_FORCE));
+                nextVelocity = nextVelocity.add(tangentialVelocity.normalize().multiply(HookshotConfig.LOOK_SWING_FORCE * distanceScale));
             }
         }
 
+        if (jumpHeld) {
+            Vec3d swingDirection = getSwingDirection(player, radial, tangent, nextVelocity, sidewaysInput);
+            nextVelocity = nextVelocity.add(swingDirection.multiply(HookshotConfig.JUMP_SWING_FORCE * distanceScale));
+        }
+
         if (SwingInputTracker.consumeJumpPressed(player)) {
-            nextVelocity = applyJump(player, radial, tangent, nextVelocity);
+            nextVelocity = applyJump(player, radial, tangent, nextVelocity, distanceScale);
         }
 
         return nextVelocity;
@@ -47,6 +54,10 @@ public final class SwingPhysics {
 
     public static boolean hasSwingIntent(ServerPlayerEntity player, Vec3d anchorPosition) {
         if (Math.abs(SwingInputTracker.getSidewaysInput(player)) > INPUT_DEAD_ZONE) {
+            return true;
+        }
+
+        if (SwingInputTracker.isJumpHeld(player)) {
             return true;
         }
 
@@ -70,7 +81,7 @@ public final class SwingPhysics {
         return velocity.subtract(radial.multiply(velocity.dotProduct(radial)));
     }
 
-    private static Vec3d applyJump(ServerPlayerEntity player, Vec3d radial, Vec3d tangent, Vec3d velocity) {
+    private static Vec3d applyJump(ServerPlayerEntity player, Vec3d radial, Vec3d tangent, Vec3d velocity, double distanceScale) {
         Vec3d tangentialVelocity = getTangentialVelocity(velocity, radial);
         Vec3d boostDirection = tangentialVelocity.lengthSquared() >= 1.0E-7D
                 ? tangentialVelocity.normalize()
@@ -78,7 +89,25 @@ public final class SwingPhysics {
 
         return velocity
                 .add(UP.multiply(HookshotConfig.SWING_JUMP_FORCE))
-                .add(boostDirection.multiply(HookshotConfig.SWING_JUMP_TANGENTIAL_BOOST));
+                .add(boostDirection.multiply(HookshotConfig.SWING_JUMP_TANGENTIAL_BOOST * distanceScale));
+    }
+
+    private static Vec3d getSwingDirection(ServerPlayerEntity player, Vec3d radial, Vec3d tangent, Vec3d velocity, double sidewaysInput) {
+        if (Math.abs(sidewaysInput) > INPUT_DEAD_ZONE) {
+            return tangent.multiply(Math.signum(sidewaysInput));
+        }
+
+        Vec3d tangentialVelocity = getTangentialVelocity(velocity, radial);
+        if (tangentialVelocity.lengthSquared() >= 1.0E-7D) {
+            return tangentialVelocity.normalize();
+        }
+
+        return getLookBasedTangent(player, radial, tangent);
+    }
+
+    private static double getDistanceScale(double distance) {
+        double scale = distance / HookshotConfig.SWING_DISTANCE_REFERENCE;
+        return Math.max(1.0D, Math.min(HookshotConfig.SWING_MAX_DISTANCE_SCALE, scale));
     }
 
     private static Vec3d getLookBasedTangent(ServerPlayerEntity player, Vec3d radial, Vec3d fallbackTangent) {

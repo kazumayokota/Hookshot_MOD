@@ -38,6 +38,7 @@ public final class HookSwingInputSender {
         PacketByteBuf buf = PacketByteBufs.create();
         buf.writeDouble(sidewaysInput);
         buf.writeBoolean(jumpStarted);
+        buf.writeBoolean(jumpPressed);
         ClientPlayNetworking.send(SwingInputTracker.SWING_INPUT_PACKET_ID, buf);
     }
 }

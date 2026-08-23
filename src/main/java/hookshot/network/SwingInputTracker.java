@@ -20,7 +20,8 @@ public final class SwingInputTracker {
         ServerPlayNetworking.registerGlobalReceiver(SWING_INPUT_PACKET_ID, (server, player, handler, buf, responseSender) -> {
             double sidewaysInput = buf.readDouble();
             boolean jumpPressed = buf.readBoolean();
-            server.execute(() -> setInput(player, sidewaysInput, jumpPressed));
+            boolean jumpHeld = buf.readBoolean();
+            server.execute(() -> setInput(player, sidewaysInput, jumpPressed, jumpHeld));
         });
     }
 
@@ -34,21 +35,25 @@ public final class SwingInputTracker {
             return false;
         }
 
-        INPUTS.put(player.getUuid(), new SwingInput(input.sidewaysInput(), false));
+        INPUTS.put(player.getUuid(), new SwingInput(input.sidewaysInput(), false, input.jumpHeld()));
         return true;
+    }
+
+    public static boolean isJumpHeld(ServerPlayerEntity player) {
+        return INPUTS.getOrDefault(player.getUuid(), SwingInput.NONE).jumpHeld();
     }
 
     public static void clear(ServerPlayerEntity player) {
         INPUTS.remove(player.getUuid());
     }
 
-    private static void setInput(ServerPlayerEntity player, double sidewaysInput, boolean jumpPressed) {
+    private static void setInput(ServerPlayerEntity player, double sidewaysInput, boolean jumpPressed, boolean jumpHeld) {
         SwingInput existing = INPUTS.getOrDefault(player.getUuid(), SwingInput.NONE);
         double clampedSidewaysInput = Math.max(-1.0D, Math.min(1.0D, sidewaysInput));
-        INPUTS.put(player.getUuid(), new SwingInput(clampedSidewaysInput, jumpPressed || existing.jumpPressed()));
+        INPUTS.put(player.getUuid(), new SwingInput(clampedSidewaysInput, jumpPressed || existing.jumpPressed(), jumpHeld));
     }
 
-    private record SwingInput(double sidewaysInput, boolean jumpPressed) {
-        private static final SwingInput NONE = new SwingInput(0.0D, false);
+    private record SwingInput(double sidewaysInput, boolean jumpPressed, boolean jumpHeld) {
+        private static final SwingInput NONE = new SwingInput(0.0D, false, false);
     }
 }

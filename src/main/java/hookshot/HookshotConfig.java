@@ -10,6 +10,7 @@ public final class HookshotConfig {
     public static final double ENTITY_GROUNDED_PULL_FORCE = 0.16D;
     public static final double SIDE_FORCE = 0.04D;
     public static final double LOOK_SWING_FORCE = 0.035D;
+    public static final double JUMP_SWING_FORCE = 0.09D;
     public static final double SWING_JUMP_FORCE = 0.32D;
     public static final double SWING_JUMP_TANGENTIAL_BOOST = 0.18D;
     public static final double MAX_SPEED = 1.8D;
@@ -20,6 +21,8 @@ public final class HookshotConfig {
     public static final double GRAPPLE_VIEW_RELEASE_DEGREES = 75.0D;
     public static final double SWING_LOOK_ALIGNMENT = 0.82D;
     public static final double SWING_MIN_TANGENTIAL_SPEED = 0.08D;
+    public static final double SWING_DISTANCE_REFERENCE = 30.0D;
+    public static final double SWING_MAX_DISTANCE_SCALE = 3.0D;
     public static final int GRAPPLE_STUCK_TICKS = 7;
     public static final double GRAPPLE_MIN_PROGRESS_PER_TICK = 0.06D;
     public static final double GRAPPLE_STUCK_MAX_SPEED = 0.18D;
