@@ -23,6 +23,8 @@ public final class HookProjectileRenderer extends EntityRenderer<HookProjectileE
 
     @Override
     public void render(HookProjectileEntity entity, float yaw, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light) {
+        HookRopeRenderer.render(entity, tickDelta, matrices, vertexConsumers, light);
+
         matrices.push();
         matrices.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(MathHelper.lerp(tickDelta, entity.prevYaw, entity.getYaw()) - 90.0F));
         matrices.multiply(Vec3f.POSITIVE_Z.getDegreesQuaternion(MathHelper.lerp(tickDelta, entity.prevPitch, entity.getPitch())));
