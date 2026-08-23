@@ -241,4 +241,12 @@ public final class HookProjectileEntity extends Entity {
     public Packet<?> createSpawnPacket() {
         return new EntitySpawnS2CPacket(this, ownerEntityId);
     }
+
+    @Override
+    public void onSpawnPacket(EntitySpawnS2CPacket packet) {
+        super.onSpawnPacket(packet);
+        ownerEntityId = packet.getEntityData();
+        setVelocity(packet.getVelocityX(), packet.getVelocityY(), packet.getVelocityZ());
+        setRotationFromDirection(getVelocity());
+    }
 }
