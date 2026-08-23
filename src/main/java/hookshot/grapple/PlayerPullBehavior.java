@@ -19,6 +19,7 @@ public final class PlayerPullBehavior {
         Vec3d currentVelocity = dampGravity(player.getVelocity(), pullDirection);
         Vec3d nextVelocity = currentVelocity.add(pullDirection.multiply(HookshotConfig.PULL_FORCE));
         nextVelocity = compensateGroundFriction(player, nextVelocity, pullDirection);
+        nextVelocity = SwingPhysics.apply(player, anchorPosition, nextVelocity);
 
         if (nextVelocity.length() > HookshotConfig.MAX_SPEED) {
             nextVelocity = nextVelocity.normalize().multiply(HookshotConfig.MAX_SPEED);

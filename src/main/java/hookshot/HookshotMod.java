@@ -1,6 +1,7 @@
 package hookshot;
 
 import hookshot.grapple.GrappleManager;
+import hookshot.network.SwingInputTracker;
 import hookshot.registry.ModItems;
 import hookshot.registry.ModEntities;
 import net.fabricmc.api.ModInitializer;
@@ -16,6 +17,7 @@ public final class HookshotMod implements ModInitializer {
         ModEntities.register();
         ModItems.register();
         GrappleManager.register();
+        SwingInputTracker.registerServerReceiver();
         LOGGER.info("Hookshot MOD initialized.");
     }
 }

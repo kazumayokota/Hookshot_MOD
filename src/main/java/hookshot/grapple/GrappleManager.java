@@ -2,6 +2,7 @@ package hookshot.grapple;
 
 import hookshot.HookshotConfig;
 import hookshot.entity.HookProjectileEntity;
+import hookshot.network.SwingInputTracker;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -59,6 +60,7 @@ public final class GrappleManager {
 
     public static void clear(ServerPlayerEntity player) {
         GrappleState state = STATES.remove(player.getUuid());
+        SwingInputTracker.clear(player);
 
         if (state != null && state.getHookUuid() != null && player.world instanceof ServerWorld serverWorld) {
             Entity hook = serverWorld.getEntity(state.getHookUuid());
@@ -90,6 +92,9 @@ public final class GrappleManager {
             ServerPlayerEntity player = server.getPlayerManager().getPlayer(entry.getKey());
 
             if (player == null || player.isDead()) {
+                if (player != null) {
+                    SwingInputTracker.clear(player);
+                }
                 iterator.remove();
                 continue;
             }
@@ -104,12 +109,17 @@ public final class GrappleManager {
                 continue;
             }
 
+            if (isPlayerMovementMode(state) && state.getAnchorPosition() != null) {
+                updateEntityAnchor(player, state);
+                updatePlayerMovementMode(player, state);
+            }
+
             if (shouldRelease(player, state)) {
                 release(player, state);
                 continue;
             }
 
-            if (state.getMode() == GrappleMode.PLAYER_PULL && state.getAnchorPosition() != null) {
+            if (isPlayerMovementMode(state) && state.getAnchorPosition() != null) {
                 updateEntityAnchor(player, state);
                 PlayerPullBehavior.tick(player, state.getAnchorPosition());
             } else if (state.getMode() == GrappleMode.ENTITY_PULL) {
@@ -138,7 +148,7 @@ public final class GrappleManager {
             return true;
         }
 
-        if (state.getMode() == GrappleMode.PLAYER_PULL && state.getAnchorPosition() != null) {
+        if (isPlayerMovementMode(state) && state.getAnchorPosition() != null) {
             if (state.getHookedEntityUuid() != null && getHookedEntity(player, state) == null) {
                 return true;
             }
@@ -186,6 +196,13 @@ public final class GrappleManager {
     }
 
     private static boolean isStuck(ServerPlayerEntity player, GrappleState state) {
+        if (SwingPhysics.hasSwingIntent(player, state.getAnchorPosition())
+                && player.getVelocity().lengthSquared() >= HookshotConfig.GRAPPLE_STUCK_MAX_SPEED * HookshotConfig.GRAPPLE_STUCK_MAX_SPEED) {
+            state.setStuckTicks(0);
+            state.setLastDistanceToAnchor(player.getPos().distanceTo(state.getAnchorPosition()));
+            return false;
+        }
+
         double distance = player.getPos().distanceTo(state.getAnchorPosition());
         double lastDistance = state.getLastDistanceToAnchor();
         state.setLastDistanceToAnchor(distance);
@@ -249,6 +266,15 @@ public final class GrappleManager {
         state.setStuckTicks(0);
         state.setLastDistanceToAnchor(-1.0D);
         state.setFallProtectionTicks(HookshotConfig.FALL_PROTECTION_TICKS);
+        SwingInputTracker.clear(player);
+    }
+
+    private static boolean isPlayerMovementMode(GrappleState state) {
+        return state.getMode() == GrappleMode.PLAYER_PULL || state.getMode() == GrappleMode.SWING;
+    }
+
+    private static void updatePlayerMovementMode(ServerPlayerEntity player, GrappleState state) {
+        state.setMode(SwingPhysics.hasSwingIntent(player, state.getAnchorPosition()) ? GrappleMode.SWING : GrappleMode.PLAYER_PULL);
     }
 
     private static void updateEntityAnchor(ServerPlayerEntity player, GrappleState state) {
