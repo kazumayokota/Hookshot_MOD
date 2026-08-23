@@ -6,6 +6,8 @@ import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.util.Arm;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Matrix3f;
 import net.minecraft.util.math.Matrix4f;
@@ -15,6 +17,9 @@ public final class HookRopeRenderer {
     private static final int SEGMENTS = 24;
     private static final float ROPE_HALF_WIDTH = 0.034F;
     private static final float ROPE_INNER_WIDTH = 0.014F;
+    private static final double HAND_SIDE_OFFSET = 0.36D;
+    private static final double HAND_FORWARD_OFFSET = 0.16D;
+    private static final double HAND_HEIGHT_RATIO = 0.72D;
 
     private HookRopeRenderer() {
     }
@@ -27,7 +32,7 @@ public final class HookRopeRenderer {
         }
 
         Vec3d hookPos = hook.getLerpedPos(tickDelta);
-        Vec3d startPos = owner.getLeashPos(tickDelta);
+        Vec3d startPos = getHandPos(hook, owner, tickDelta);
         Vec3d delta = startPos.subtract(hookPos);
 
         matrices.push();
@@ -44,6 +49,23 @@ public final class HookRopeRenderer {
         }
 
         matrices.pop();
+    }
+
+    private static Vec3d getHandPos(HookProjectileEntity hook, Entity owner, float tickDelta) {
+        Vec3d base = owner.getLerpedPos(tickDelta);
+        float bodyYaw = owner instanceof LivingEntity livingEntity
+                ? MathHelper.lerp(tickDelta, livingEntity.prevBodyYaw, livingEntity.bodyYaw)
+                : MathHelper.lerp(tickDelta, owner.prevYaw, owner.getYaw());
+        float yawRadians = bodyYaw * MathHelper.RADIANS_PER_DEGREE;
+        Vec3d forward = new Vec3d(-MathHelper.sin(yawRadians), 0.0D, MathHelper.cos(yawRadians));
+        Vec3d right = new Vec3d(-MathHelper.cos(yawRadians), 0.0D, -MathHelper.sin(yawRadians));
+        Arm sourceArm = hook.getSourceArm(owner);
+        double sideSign = sourceArm == Arm.RIGHT ? 1.0D : -1.0D;
+
+        return base
+                .add(0.0D, owner.getHeight() * HAND_HEIGHT_RATIO, 0.0D)
+                .add(forward.multiply(HAND_FORWARD_OFFSET))
+                .add(right.multiply(HAND_SIDE_OFFSET * sideSign));
     }
 
     private static void addSegment(VertexConsumer vertexConsumer, Matrix4f positionMatrix, Matrix3f normalMatrix, Vec3d delta, int segment, float offset, int color, int light) {
