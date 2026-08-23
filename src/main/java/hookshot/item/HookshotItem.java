@@ -1,7 +1,9 @@
 package hookshot.item;
 
 import hookshot.entity.HookProjectileEntity;
+import hookshot.grapple.GrappleManager;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -30,6 +32,10 @@ public final class HookshotItem extends Item {
         user.getItemCooldownManager().set(this, 8);
 
         if (!world.isClient) {
+            if (user instanceof ServerPlayerEntity serverPlayer) {
+                GrappleManager.clear(serverPlayer);
+            }
+
             HookProjectileEntity hook = new HookProjectileEntity(world, user);
             hook.setSourceHand(hand);
             hook.shootFrom(user);
