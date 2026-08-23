@@ -150,9 +150,9 @@ public final class GrappleManager {
 
         double progress = lastDistance - distance;
         boolean barelyMovedTowardAnchor = progress < HookshotConfig.GRAPPLE_MIN_PROGRESS_PER_TICK;
-        boolean nearlyStationary = player.getVelocity().horizontalLengthSquared() < 0.0025D;
+        boolean notMovingMeaningfully = player.getVelocity().lengthSquared() < HookshotConfig.GRAPPLE_STUCK_MAX_SPEED * HookshotConfig.GRAPPLE_STUCK_MAX_SPEED;
 
-        if (barelyMovedTowardAnchor && nearlyStationary) {
+        if (barelyMovedTowardAnchor && notMovingMeaningfully) {
             state.setStuckTicks(state.getStuckTicks() + 1);
         } else {
             state.setStuckTicks(0);

@@ -8,8 +8,9 @@ public final class HookshotConfig {
     public static final double MAX_SPEED = 1.8D;
     public static final double GRAPPLE_RELEASE_DISTANCE = 2.0D;
     public static final double GRAPPLE_VIEW_RELEASE_DEGREES = 75.0D;
-    public static final int GRAPPLE_STUCK_TICKS = 12;
-    public static final double GRAPPLE_MIN_PROGRESS_PER_TICK = 0.03D;
+    public static final int GRAPPLE_STUCK_TICKS = 7;
+    public static final double GRAPPLE_MIN_PROGRESS_PER_TICK = 0.06D;
+    public static final double GRAPPLE_STUCK_MAX_SPEED = 0.18D;
     public static final double HOOK_RETURN_SPEED = 4.0D;
     public static final double HOOK_RETURN_FINISH_DISTANCE = 1.2D;
 
