@@ -40,6 +40,7 @@ public final class HookProjectileEntity extends Entity {
     private static final double BLOCK_SURFACE_OFFSET = 0.08D;
 
     private UUID ownerUuid;
+    private UUID attachedEntityUuid;
     private int ownerEntityId;
     private int attachedTicks;
     private double traveledDistance;
@@ -187,10 +188,13 @@ public final class HookProjectileEntity extends Entity {
     }
 
     private void onEntityHit(EntityHitResult hitResult) {
+        Entity target = hitResult.getEntity();
         setHookState(HookState.ATTACHED_ENTITY);
+        attachedEntityUuid = target.getUuid();
         setRotationFromDirection(getAimDirection());
         setVelocity(Vec3d.ZERO);
         setPosition(hitResult.getPos());
+        startEntityGrapple(target);
         playSound(SoundEvents.ENTITY_ARROW_HIT, 1.0F, 1.2F);
     }
 
@@ -214,10 +218,48 @@ public final class HookProjectileEntity extends Entity {
         }
     }
 
+    private void startEntityGrapple(Entity target) {
+        Entity owner = getOwner();
+
+        if (owner instanceof ServerPlayerEntity player) {
+            GrappleManager.startEntityGrapple(player, this, target);
+        }
+    }
+
     private void tickAttached() {
         setVelocity(Vec3d.ZERO);
 
+        if (getHookState() == HookState.ATTACHED_ENTITY) {
+            Entity target = getAttachedEntity();
+            if (target == null) {
+                if (!world.isClient) {
+                    startReturning();
+                }
+                return;
+            }
+
+            setPosition(getEntityAnchorPosition(target));
+        }
+
         attachedTicks++;
+    }
+
+    private Entity getAttachedEntity() {
+        if (attachedEntityUuid == null) {
+            return null;
+        }
+
+        Entity target = world instanceof ServerWorld serverWorld ? serverWorld.getEntity(attachedEntityUuid) : null;
+
+        if (target == null || target.isRemoved() || !target.isAlive()) {
+            return null;
+        }
+
+        return target;
+    }
+
+    private static Vec3d getEntityAnchorPosition(Entity entity) {
+        return entity.getPos().add(0.0D, entity.getHeight() * 0.5D, 0.0D);
     }
 
     private void tickReturning() {
@@ -319,6 +361,7 @@ public final class HookProjectileEntity extends Entity {
     protected void readCustomDataFromNbt(NbtCompound nbt) {
         setHookState(readState(nbt.getString("HookState")));
         ownerUuid = nbt.containsUuid("Owner") ? nbt.getUuid("Owner") : null;
+        attachedEntityUuid = nbt.containsUuid("AttachedEntity") ? nbt.getUuid("AttachedEntity") : null;
         attachedTicks = nbt.getInt("AttachedTicks");
         traveledDistance = nbt.getDouble("TraveledDistance");
         setAimDirection(new Vec3d(nbt.getDouble("AimX"), nbt.getDouble("AimY"), nbt.getDouble("AimZ")));
@@ -329,6 +372,7 @@ public final class HookProjectileEntity extends Entity {
     protected void writeCustomDataToNbt(NbtCompound nbt) {
         nbt.putString("HookState", getHookState().name());
         Optional.ofNullable(ownerUuid).ifPresent(uuid -> nbt.putUuid("Owner", uuid));
+        Optional.ofNullable(attachedEntityUuid).ifPresent(uuid -> nbt.putUuid("AttachedEntity", uuid));
         nbt.putInt("AttachedTicks", attachedTicks);
         nbt.putDouble("TraveledDistance", traveledDistance);
         Vec3d direction = getAimDirection();

@@ -8,6 +8,13 @@ import java.util.Map;
 import java.util.UUID;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.decoration.ArmorStandEntity;
+import net.minecraft.entity.mob.EndermanEntity;
+import net.minecraft.entity.mob.PiglinEntity;
+import net.minecraft.entity.mob.ZombieEntity;
+import net.minecraft.entity.mob.ZombieVillagerEntity;
+import net.minecraft.entity.mob.ZombifiedPiglinEntity;
+import net.minecraft.entity.passive.VillagerEntity;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -26,8 +33,21 @@ public final class GrappleManager {
     public static void startBlockGrapple(ServerPlayerEntity player, HookProjectileEntity hook, Vec3d anchorPosition) {
         GrappleState state = STATES.computeIfAbsent(player.getUuid(), ignored -> new GrappleState());
         state.setHookUuid(hook.getUuid());
+        state.setHookedEntityUuid(null);
         state.setAnchorPosition(anchorPosition);
         state.setMode(GrappleMode.PLAYER_PULL);
+        state.setActiveTicks(0);
+        state.setStuckTicks(0);
+        state.setLastDistanceToAnchor(-1.0D);
+        state.setActive(true);
+    }
+
+    public static void startEntityGrapple(ServerPlayerEntity player, HookProjectileEntity hook, Entity target) {
+        GrappleState state = STATES.computeIfAbsent(player.getUuid(), ignored -> new GrappleState());
+        state.setHookUuid(hook.getUuid());
+        state.setHookedEntityUuid(target.getUuid());
+        state.setAnchorPosition(getEntityAnchorPosition(target));
+        state.setMode(isHumanTypeTarget(target) ? GrappleMode.ENTITY_PULL : GrappleMode.PLAYER_PULL);
         state.setActiveTicks(0);
         state.setStuckTicks(0);
         state.setLastDistanceToAnchor(-1.0D);
@@ -87,7 +107,14 @@ public final class GrappleManager {
             }
 
             if (state.getMode() == GrappleMode.PLAYER_PULL && state.getAnchorPosition() != null) {
+                updateEntityAnchor(player, state);
                 PlayerPullBehavior.tick(player, state.getAnchorPosition());
+            } else if (state.getMode() == GrappleMode.ENTITY_PULL) {
+                Entity target = getHookedEntity(player, state);
+                if (target != null) {
+                    EntityPullBehavior.tick(player, target);
+                    state.setAnchorPosition(getEntityAnchorPosition(target));
+                }
             }
 
             state.setActiveTicks(state.getActiveTicks() + 1);
@@ -109,6 +136,12 @@ public final class GrappleManager {
         }
 
         if (state.getMode() == GrappleMode.PLAYER_PULL && state.getAnchorPosition() != null) {
+            if (state.getHookedEntityUuid() != null && getHookedEntity(player, state) == null) {
+                return true;
+            }
+
+            updateEntityAnchor(player, state);
+
             if (PlayerPullBehavior.isCloseEnough(player, state.getAnchorPosition())) {
                 return true;
             }
@@ -120,6 +153,13 @@ public final class GrappleManager {
             if (isLookingAway(player, state.getAnchorPosition())) {
                 return true;
             }
+        } else if (state.getMode() == GrappleMode.ENTITY_PULL) {
+            Entity target = getHookedEntity(player, state);
+            if (target == null || EntityPullBehavior.isCloseEnough(player, target)) {
+                return true;
+            }
+
+            state.setAnchorPosition(getEntityAnchorPosition(target));
         }
 
         Entity hook = player.world instanceof ServerWorld serverWorld ? serverWorld.getEntity(state.getHookUuid()) : null;
@@ -173,10 +213,45 @@ public final class GrappleManager {
         state.setActive(false);
         state.setMode(GrappleMode.NONE);
         state.setHookUuid(null);
+        state.setHookedEntityUuid(null);
         state.setAnchorPosition(null);
         state.setActiveTicks(0);
         state.setStuckTicks(0);
         state.setLastDistanceToAnchor(-1.0D);
         state.setFallProtectionTicks(HookshotConfig.FALL_PROTECTION_TICKS);
+    }
+
+    private static void updateEntityAnchor(ServerPlayerEntity player, GrappleState state) {
+        Entity target = getHookedEntity(player, state);
+        if (target != null) {
+            state.setAnchorPosition(getEntityAnchorPosition(target));
+        }
+    }
+
+    private static Entity getHookedEntity(ServerPlayerEntity player, GrappleState state) {
+        if (state.getHookedEntityUuid() == null || !(player.world instanceof ServerWorld serverWorld)) {
+            return null;
+        }
+
+        Entity target = serverWorld.getEntity(state.getHookedEntityUuid());
+        if (target == null || target.isRemoved() || !target.isAlive()) {
+            return null;
+        }
+
+        return target;
+    }
+
+    private static Vec3d getEntityAnchorPosition(Entity entity) {
+        return entity.getPos().add(0.0D, entity.getHeight() * 0.5D, 0.0D);
+    }
+
+    private static boolean isHumanTypeTarget(Entity entity) {
+        return entity instanceof VillagerEntity
+                || entity instanceof ArmorStandEntity
+                || entity instanceof ZombieEntity
+                || entity instanceof ZombieVillagerEntity
+                || entity instanceof ZombifiedPiglinEntity
+                || entity instanceof PiglinEntity
+                || entity instanceof EndermanEntity;
     }
 }
