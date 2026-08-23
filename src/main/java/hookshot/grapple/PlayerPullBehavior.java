@@ -11,7 +11,7 @@ public final class PlayerPullBehavior {
     public static void tick(ServerPlayerEntity player, Vec3d anchorPosition) {
         Vec3d toAnchor = anchorPosition.subtract(player.getPos());
 
-        if (toAnchor.lengthSquared() < 0.25D) {
+        if (isCloseEnough(player, anchorPosition)) {
             return;
         }
 
@@ -25,5 +25,9 @@ public final class PlayerPullBehavior {
         player.setVelocity(nextVelocity);
         player.velocityModified = true;
         player.fallDistance = 0.0F;
+    }
+
+    public static boolean isCloseEnough(ServerPlayerEntity player, Vec3d anchorPosition) {
+        return player.getPos().squaredDistanceTo(anchorPosition) <= HookshotConfig.GRAPPLE_RELEASE_DISTANCE * HookshotConfig.GRAPPLE_RELEASE_DISTANCE;
     }
 }

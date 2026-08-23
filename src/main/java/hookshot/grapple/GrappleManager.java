@@ -81,6 +81,12 @@ public final class GrappleManager {
             return true;
         }
 
+        if (state.getMode() == GrappleMode.PLAYER_PULL
+                && state.getAnchorPosition() != null
+                && PlayerPullBehavior.isCloseEnough(player, state.getAnchorPosition())) {
+            return true;
+        }
+
         Entity hook = player.world instanceof ServerWorld serverWorld ? serverWorld.getEntity(state.getHookUuid()) : null;
         return !(hook instanceof HookProjectileEntity) || hook.isRemoved();
     }
