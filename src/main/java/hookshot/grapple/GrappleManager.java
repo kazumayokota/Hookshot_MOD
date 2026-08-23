@@ -2,6 +2,7 @@ package hookshot.grapple;
 
 import hookshot.HookshotConfig;
 import hookshot.entity.HookProjectileEntity;
+import hookshot.network.SwingInputTracker;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -59,6 +60,7 @@ public final class GrappleManager {
 
     public static void clear(ServerPlayerEntity player) {
         GrappleState state = STATES.remove(player.getUuid());
+        SwingInputTracker.clear(player);
 
         if (state != null && state.getHookUuid() != null && player.world instanceof ServerWorld serverWorld) {
             Entity hook = serverWorld.getEntity(state.getHookUuid());
@@ -90,6 +92,9 @@ public final class GrappleManager {
             ServerPlayerEntity player = server.getPlayerManager().getPlayer(entry.getKey());
 
             if (player == null || player.isDead()) {
+                if (player != null) {
+                    SwingInputTracker.clear(player);
+                }
                 iterator.remove();
                 continue;
             }
@@ -261,6 +266,7 @@ public final class GrappleManager {
         state.setStuckTicks(0);
         state.setLastDistanceToAnchor(-1.0D);
         state.setFallProtectionTicks(HookshotConfig.FALL_PROTECTION_TICKS);
+        SwingInputTracker.clear(player);
     }
 
     private static boolean isPlayerMovementMode(GrappleState state) {

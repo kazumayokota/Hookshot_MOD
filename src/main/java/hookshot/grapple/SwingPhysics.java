@@ -1,6 +1,7 @@
 package hookshot.grapple;
 
 import hookshot.HookshotConfig;
+import hookshot.network.SwingInputTracker;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.math.Vec3d;
 
@@ -24,7 +25,7 @@ public final class SwingPhysics {
         }
 
         Vec3d nextVelocity = velocity;
-        double sidewaysInput = player.sidewaysSpeed;
+        double sidewaysInput = SwingInputTracker.getSidewaysInput(player);
 
         if (Math.abs(sidewaysInput) > INPUT_DEAD_ZONE) {
             nextVelocity = nextVelocity.add(tangent.multiply(sidewaysInput * HookshotConfig.SIDE_FORCE));
@@ -41,7 +42,7 @@ public final class SwingPhysics {
     }
 
     public static boolean hasSwingIntent(ServerPlayerEntity player, Vec3d anchorPosition) {
-        if (Math.abs(player.sidewaysSpeed) > INPUT_DEAD_ZONE) {
+        if (Math.abs(SwingInputTracker.getSidewaysInput(player)) > INPUT_DEAD_ZONE) {
             return true;
         }
 

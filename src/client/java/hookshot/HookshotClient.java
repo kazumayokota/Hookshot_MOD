@@ -2,6 +2,7 @@ package hookshot;
 
 import hookshot.client.HookProjectileRenderer;
 import hookshot.client.HookReticleRenderer;
+import hookshot.client.HookSwingInputSender;
 import hookshot.registry.ModEntities;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
@@ -12,6 +13,7 @@ public final class HookshotClient implements ClientModInitializer {
     public void onInitializeClient() {
         EntityRendererRegistry.register(ModEntities.HOOK_PROJECTILE, HookProjectileRenderer::new);
         HudRenderCallback.EVENT.register(HookReticleRenderer::render);
+        HookSwingInputSender.register();
         HookshotMod.LOGGER.info("Hookshot MOD client initialized.");
     }
 }
