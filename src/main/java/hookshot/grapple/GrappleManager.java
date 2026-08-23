@@ -11,7 +11,9 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.decoration.ArmorStandEntity;
 import net.minecraft.entity.mob.CreeperEntity;
 import net.minecraft.entity.mob.EndermanEntity;
+import net.minecraft.entity.mob.IllagerEntity;
 import net.minecraft.entity.mob.PiglinEntity;
+import net.minecraft.entity.mob.WitchEntity;
 import net.minecraft.entity.mob.ZombieEntity;
 import net.minecraft.entity.mob.ZombieVillagerEntity;
 import net.minecraft.entity.mob.ZombifiedPiglinEntity;
@@ -277,9 +279,11 @@ public final class GrappleManager {
         return entity instanceof VillagerEntity
                 || entity instanceof ArmorStandEntity
                 || entity instanceof CreeperEntity
+                || entity instanceof IllagerEntity
                 || entity instanceof ZombieEntity
                 || entity instanceof ZombieVillagerEntity
                 || entity instanceof ZombifiedPiglinEntity
+                || entity instanceof WitchEntity
                 || entity instanceof PiglinEntity
                 || entity instanceof EndermanEntity;
     }
