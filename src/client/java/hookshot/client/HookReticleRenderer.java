@@ -1,5 +1,6 @@
 package hookshot.client;
 
+import hookshot.HookshotConfig;
 import hookshot.registry.ModItems;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawableHelper;
@@ -10,8 +11,6 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.hit.HitResult;
 
 public final class HookReticleRenderer {
-    public static final double MAX_RANGE = 80.0D;
-
     private static final int HIT_COLOR = 0xFFFFFFFF;
     private static final int MISS_COLOR = 0xFFFF3030;
     private static final int HALF_SIZE = 5;
@@ -43,7 +42,7 @@ public final class HookReticleRenderer {
     }
 
     private static boolean hasHookableTarget(PlayerEntity player, float tickDelta) {
-        HitResult hitResult = player.raycast(MAX_RANGE, tickDelta, false);
+        HitResult hitResult = player.raycast(HookshotConfig.MAX_RANGE, tickDelta, false);
         return hitResult.getType() == HitResult.Type.BLOCK;
     }
 

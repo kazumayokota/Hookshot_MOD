@@ -1,6 +1,7 @@
 package hookshot;
 
 import hookshot.registry.ModItems;
+import hookshot.registry.ModEntities;
 import net.fabricmc.api.ModInitializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,6 +12,7 @@ public final class HookshotMod implements ModInitializer {
 
     @Override
     public void onInitialize() {
+        ModEntities.register();
         ModItems.register();
         LOGGER.info("Hookshot MOD initialized.");
     }
