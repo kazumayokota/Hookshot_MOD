@@ -19,6 +19,8 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.util.hit.HitResult;
+import net.minecraft.util.Arm;
+import net.minecraft.util.Hand;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
@@ -30,6 +32,7 @@ public final class HookProjectileEntity extends Entity {
     private static final TrackedData<Float> AIM_X = DataTracker.registerData(HookProjectileEntity.class, TrackedDataHandlerRegistry.FLOAT);
     private static final TrackedData<Float> AIM_Y = DataTracker.registerData(HookProjectileEntity.class, TrackedDataHandlerRegistry.FLOAT);
     private static final TrackedData<Float> AIM_Z = DataTracker.registerData(HookProjectileEntity.class, TrackedDataHandlerRegistry.FLOAT);
+    private static final TrackedData<Integer> SOURCE_HAND = DataTracker.registerData(HookProjectileEntity.class, TrackedDataHandlerRegistry.INTEGER);
     private static final double SPEED = 3.2D;
     private static final int ATTACHED_LIFETIME_TICKS = 60;
     private static final double START_OFFSET = 0.25D;
@@ -65,6 +68,19 @@ public final class HookProjectileEntity extends Entity {
         return HookState.values()[MathHelper.clamp(dataTracker.get(HOOK_STATE), 0, HookState.values().length - 1)];
     }
 
+    public void setSourceHand(Hand hand) {
+        dataTracker.set(SOURCE_HAND, hand == Hand.OFF_HAND ? 1 : 0);
+    }
+
+    public Hand getSourceHand() {
+        return dataTracker.get(SOURCE_HAND) == 1 ? Hand.OFF_HAND : Hand.MAIN_HAND;
+    }
+
+    public Arm getSourceArm(Entity owner) {
+        Arm mainArm = owner instanceof net.minecraft.entity.player.PlayerEntity player ? player.getMainArm() : Arm.RIGHT;
+        return getSourceHand() == Hand.MAIN_HAND ? mainArm : mainArm.getOpposite();
+    }
+
     public void setOwner(Entity owner) {
         ownerUuid = owner.getUuid();
         ownerEntityId = owner.getId();
@@ -88,6 +104,7 @@ public final class HookProjectileEntity extends Entity {
         dataTracker.startTracking(AIM_X, 0.0F);
         dataTracker.startTracking(AIM_Y, 0.0F);
         dataTracker.startTracking(AIM_Z, 1.0F);
+        dataTracker.startTracking(SOURCE_HAND, 0);
     }
 
     @Override
@@ -245,6 +262,7 @@ public final class HookProjectileEntity extends Entity {
         attachedTicks = nbt.getInt("AttachedTicks");
         traveledDistance = nbt.getDouble("TraveledDistance");
         setAimDirection(new Vec3d(nbt.getDouble("AimX"), nbt.getDouble("AimY"), nbt.getDouble("AimZ")));
+        setSourceHand(nbt.getBoolean("OffHand") ? Hand.OFF_HAND : Hand.MAIN_HAND);
     }
 
     @Override
@@ -257,6 +275,7 @@ public final class HookProjectileEntity extends Entity {
         nbt.putDouble("AimX", direction.x);
         nbt.putDouble("AimY", direction.y);
         nbt.putDouble("AimZ", direction.z);
+        nbt.putBoolean("OffHand", getSourceHand() == Hand.OFF_HAND);
     }
 
     private static HookState readState(String value) {

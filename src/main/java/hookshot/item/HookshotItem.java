@@ -31,6 +31,7 @@ public final class HookshotItem extends Item {
 
         if (!world.isClient) {
             HookProjectileEntity hook = new HookProjectileEntity(world, user);
+            hook.setSourceHand(hand);
             hook.shootFrom(user);
             world.spawnEntity(hook);
             world.playSound(null, user.getX(), user.getY(), user.getZ(), SoundEvents.ITEM_CROSSBOW_SHOOT, SoundCategory.PLAYERS, 1.0F, 1.0F);

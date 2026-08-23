@@ -4,6 +4,7 @@
   "package": "hookshot.client.mixin",
   "compatibilityLevel": "JAVA_17",
   "client": [
+    "BipedEntityModelMixin",
     "InGameHudMixin"
   ],
   "injectors": {
