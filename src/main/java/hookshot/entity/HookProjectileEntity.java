@@ -1,12 +1,14 @@
 package hookshot.entity;
 
 import hookshot.HookshotConfig;
+import hookshot.grapple.GrappleManager;
 import hookshot.registry.ModEntities;
 import java.util.Optional;
 import java.util.UUID;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.MovementType;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
@@ -15,6 +17,7 @@ import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.Packet;
 import net.minecraft.network.packet.s2c.play.EntitySpawnS2CPacket;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.EntityHitResult;
@@ -34,7 +37,6 @@ public final class HookProjectileEntity extends Entity {
     private static final TrackedData<Float> AIM_Z = DataTracker.registerData(HookProjectileEntity.class, TrackedDataHandlerRegistry.FLOAT);
     private static final TrackedData<Integer> SOURCE_HAND = DataTracker.registerData(HookProjectileEntity.class, TrackedDataHandlerRegistry.INTEGER);
     private static final double SPEED = 3.2D;
-    private static final int ATTACHED_LIFETIME_TICKS = 60;
     private static final double START_OFFSET = 0.25D;
     private static final double BLOCK_SURFACE_OFFSET = 0.08D;
 
@@ -194,20 +196,31 @@ public final class HookProjectileEntity extends Entity {
         Vec3d normal = Vec3d.of(hitResult.getSide().getVector());
         Vec3d attachedPos = hitResult.getPos().add(normal.multiply(BLOCK_SURFACE_OFFSET));
         setPosition(attachedPos);
+        startBlockGrapple(attachedPos);
         playSound(SoundEvents.ENTITY_ARROW_HIT, 1.0F, 1.0F);
+    }
+
+    private void startBlockGrapple(Vec3d anchorPosition) {
+        Entity owner = getOwner();
+
+        if (owner instanceof ServerPlayerEntity player) {
+            GrappleManager.startBlockGrapple(player, this, anchorPosition);
+        }
     }
 
     private void tickAttached() {
         setVelocity(Vec3d.ZERO);
 
-        if (!world.isClient && ++attachedTicks >= ATTACHED_LIFETIME_TICKS) {
-            removeHook();
-        }
+        attachedTicks++;
     }
 
     private void removeHook() {
         setHookState(HookState.REMOVED);
         discard();
+    }
+
+    public void release() {
+        removeHook();
     }
 
     private void setHookState(HookState state) {

@@ -1,5 +1,6 @@
 package hookshot;
 
+import hookshot.grapple.GrappleManager;
 import hookshot.registry.ModItems;
 import hookshot.registry.ModEntities;
 import net.fabricmc.api.ModInitializer;
@@ -14,6 +15,7 @@ public final class HookshotMod implements ModInitializer {
     public void onInitialize() {
         ModEntities.register();
         ModItems.register();
+        GrappleManager.register();
         LOGGER.info("Hookshot MOD initialized.");
     }
 }
