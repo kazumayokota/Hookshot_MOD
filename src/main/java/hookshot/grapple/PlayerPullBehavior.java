@@ -18,6 +18,7 @@ public final class PlayerPullBehavior {
         Vec3d pullDirection = toAnchor.normalize();
         Vec3d currentVelocity = dampGravity(player.getVelocity(), pullDirection);
         Vec3d nextVelocity = currentVelocity.add(pullDirection.multiply(HookshotConfig.PULL_FORCE));
+        nextVelocity = compensateGroundFriction(player, nextVelocity, pullDirection);
 
         if (nextVelocity.length() > HookshotConfig.MAX_SPEED) {
             nextVelocity = nextVelocity.normalize().multiply(HookshotConfig.MAX_SPEED);
@@ -26,6 +27,19 @@ public final class PlayerPullBehavior {
         player.setVelocity(nextVelocity);
         player.velocityModified = true;
         player.fallDistance = 0.0F;
+    }
+
+    private static Vec3d compensateGroundFriction(ServerPlayerEntity player, Vec3d velocity, Vec3d pullDirection) {
+        if (!player.isOnGround()) {
+            return velocity;
+        }
+
+        Vec3d horizontalPull = new Vec3d(pullDirection.x, 0.0D, pullDirection.z);
+        if (horizontalPull.lengthSquared() < 1.0E-7D) {
+            return velocity;
+        }
+
+        return velocity.add(horizontalPull.normalize().multiply(HookshotConfig.GROUNDED_PULL_FORCE));
     }
 
     private static Vec3d dampGravity(Vec3d velocity, Vec3d pullDirection) {

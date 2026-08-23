@@ -5,6 +5,7 @@ public final class HookshotConfig {
     public static final int MAX_GRAPPLE_TICKS = 100;
     public static final int FALL_PROTECTION_TICKS = 100;
     public static final double PULL_FORCE = 0.16D;
+    public static final double GROUNDED_PULL_FORCE = 0.12D;
     public static final double MAX_SPEED = 1.8D;
     public static final double GRAPPLE_GRAVITY_DAMPING = 0.10D;
     public static final double GRAPPLE_MAX_DOWNWARD_SPEED = -0.25D;
