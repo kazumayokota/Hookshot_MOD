@@ -177,6 +177,10 @@ public final class GrappleManager {
             if (isEntityStuck(player, target, state)) {
                 return true;
             }
+
+            if (isLookingAway(player, state.getAnchorPosition())) {
+                return true;
+            }
         }
 
         Entity hook = player.world instanceof ServerWorld serverWorld ? serverWorld.getEntity(state.getHookUuid()) : null;
@@ -237,9 +241,8 @@ public final class GrappleManager {
 
         double progress = lastDistance - distance;
         boolean barelyMovedTowardPlayer = progress < HookshotConfig.GRAPPLE_MIN_PROGRESS_PER_TICK;
-        boolean notMovingMeaningfully = target.getVelocity().lengthSquared() < HookshotConfig.GRAPPLE_STUCK_MAX_SPEED * HookshotConfig.GRAPPLE_STUCK_MAX_SPEED;
 
-        if (barelyMovedTowardPlayer && notMovingMeaningfully) {
+        if (barelyMovedTowardPlayer) {
             state.setStuckTicks(state.getStuckTicks() + 1);
         } else {
             state.setStuckTicks(0);
