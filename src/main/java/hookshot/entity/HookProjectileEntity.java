@@ -144,7 +144,7 @@ public final class HookProjectileEntity extends Entity {
         }
 
         if (traveledDistance >= HookshotConfig.MAX_RANGE || age > 100) {
-            removeHook();
+            startReturning();
         }
     }
 
@@ -258,6 +258,10 @@ public final class HookProjectileEntity extends Entity {
             return;
         }
 
+        startReturning();
+    }
+
+    private void startReturning() {
         setHookState(HookState.RETURNING);
         setVelocity(Vec3d.ZERO);
     }
