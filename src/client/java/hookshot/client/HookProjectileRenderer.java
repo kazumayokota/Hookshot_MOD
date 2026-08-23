@@ -15,13 +15,13 @@ import net.minecraft.util.math.Vec3d;
 
 public final class HookProjectileRenderer extends EntityRenderer<HookProjectileEntity> {
     private static final Identifier TEXTURE = new Identifier("textures/entity/projectiles/arrow.png");
-    private static final double SHAFT_BACK_LENGTH = 0.54D;
-    private static final double SHAFT_FRONT_LENGTH = 0.02D;
-    private static final double SHAFT_RADIUS = 0.025D;
-    private static final double TIP_LENGTH = 0.16D;
-    private static final double TIP_RADIUS = 0.075D;
-    private static final double BARB_BACK = 0.14D;
-    private static final double BARB_SPREAD = 0.12D;
+    private static final double SHAFT_BACK_LENGTH = 0.76D;
+    private static final double SHAFT_FRONT_LENGTH = 0.03D;
+    private static final double SHAFT_RADIUS = 0.035D;
+    private static final double TIP_LENGTH = 0.22D;
+    private static final double TIP_RADIUS = 0.105D;
+    private static final double BARB_BACK = 0.20D;
+    private static final double BARB_SPREAD = 0.17D;
 
     public HookProjectileRenderer(EntityRendererFactory.Context context) {
         super(context);
@@ -101,7 +101,7 @@ public final class HookProjectileRenderer extends EntityRenderer<HookProjectileE
     }
 
     private static void renderBarb(VertexConsumer vertexConsumer, Matrix4f positionMatrix, Matrix3f normalMatrix, Vec3d root, Vec3d point, Vec3d widthAxis, int light) {
-        Vec3d width = widthAxis.multiply(0.018D);
+        Vec3d width = widthAxis.multiply(0.026D);
         Vec3d normal = point.subtract(root).crossProduct(widthAxis).normalize();
         quad(vertexConsumer, positionMatrix, normalMatrix, root.add(width), point.add(width), point.subtract(width), root.subtract(width), normal, light, 0.75F, 0.00F, 1.00F, 0.25F);
     }

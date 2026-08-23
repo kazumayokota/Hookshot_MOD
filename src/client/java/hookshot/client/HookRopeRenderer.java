@@ -13,6 +13,8 @@ import net.minecraft.util.math.Vec3d;
 
 public final class HookRopeRenderer {
     private static final int SEGMENTS = 24;
+    private static final float ROPE_HALF_WIDTH = 0.034F;
+    private static final float ROPE_INNER_WIDTH = 0.014F;
 
     private HookRopeRenderer() {
     }
@@ -35,20 +37,20 @@ public final class HookRopeRenderer {
         Matrix3f normalMatrix = entry.getNormalMatrix();
 
         for (int segment = 0; segment < SEGMENTS; segment++) {
-            addSegment(vertexConsumer, positionMatrix, normalMatrix, delta, segment, false, light);
-            addSegment(vertexConsumer, positionMatrix, normalMatrix, delta, segment, true, light);
+            addSegment(vertexConsumer, positionMatrix, normalMatrix, delta, segment, -ROPE_HALF_WIDTH, 0x6E5739, light);
+            addSegment(vertexConsumer, positionMatrix, normalMatrix, delta, segment, -ROPE_INNER_WIDTH, 0xA98A58, light);
+            addSegment(vertexConsumer, positionMatrix, normalMatrix, delta, segment, ROPE_INNER_WIDTH, 0x8A7048, light);
+            addSegment(vertexConsumer, positionMatrix, normalMatrix, delta, segment, ROPE_HALF_WIDTH, 0xC0A06A, light);
         }
 
         matrices.pop();
     }
 
-    private static void addSegment(VertexConsumer vertexConsumer, Matrix4f positionMatrix, Matrix3f normalMatrix, Vec3d delta, int segment, boolean alternate, int light) {
+    private static void addSegment(VertexConsumer vertexConsumer, Matrix4f positionMatrix, Matrix3f normalMatrix, Vec3d delta, int segment, float offset, int color, int light) {
         float start = (float) segment / SEGMENTS;
         float end = (float) (segment + 1) / SEGMENTS;
         float sagStart = getSag(start);
         float sagEnd = getSag(end);
-        float offset = alternate ? 0.018F : -0.018F;
-        int color = alternate ? 0x7A6241 : 0xA98A58;
 
         vertex(vertexConsumer, positionMatrix, normalMatrix, delta, start, sagStart, offset, color, light);
         vertex(vertexConsumer, positionMatrix, normalMatrix, delta, end, sagEnd, offset, color, light);
