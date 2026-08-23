@@ -16,7 +16,9 @@ public final class EntityPullBehavior {
             return;
         }
 
-        Vec3d nextVelocity = target.getVelocity().add(toPlayer.normalize().multiply(HookshotConfig.ENTITY_PULL_FORCE));
+        Vec3d pullDirection = toPlayer.normalize();
+        Vec3d nextVelocity = target.getVelocity().add(pullDirection.multiply(HookshotConfig.ENTITY_PULL_FORCE));
+        nextVelocity = compensateGroundFriction(target, nextVelocity, pullDirection);
 
         if (nextVelocity.length() > HookshotConfig.ENTITY_MAX_SPEED) {
             nextVelocity = nextVelocity.normalize().multiply(HookshotConfig.ENTITY_MAX_SPEED);
@@ -25,6 +27,19 @@ public final class EntityPullBehavior {
         target.setVelocity(nextVelocity);
         target.velocityModified = true;
         target.fallDistance = 0.0F;
+    }
+
+    private static Vec3d compensateGroundFriction(Entity target, Vec3d velocity, Vec3d pullDirection) {
+        if (!target.isOnGround()) {
+            return velocity;
+        }
+
+        Vec3d horizontalPull = new Vec3d(pullDirection.x, 0.0D, pullDirection.z);
+        if (horizontalPull.lengthSquared() < 1.0E-7D) {
+            return velocity;
+        }
+
+        return velocity.add(horizontalPull.normalize().multiply(HookshotConfig.ENTITY_GROUNDED_PULL_FORCE));
     }
 
     public static boolean isCloseEnough(ServerPlayerEntity player, Entity target) {

@@ -9,6 +9,7 @@ import java.util.UUID;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.decoration.ArmorStandEntity;
+import net.minecraft.entity.mob.CreeperEntity;
 import net.minecraft.entity.mob.EndermanEntity;
 import net.minecraft.entity.mob.PiglinEntity;
 import net.minecraft.entity.mob.ZombieEntity;
@@ -160,6 +161,10 @@ public final class GrappleManager {
             }
 
             state.setAnchorPosition(getEntityAnchorPosition(target));
+
+            if (isEntityStuck(player, target, state)) {
+                return true;
+            }
         }
 
         Entity hook = player.world instanceof ServerWorld serverWorld ? serverWorld.getEntity(state.getHookUuid()) : null;
@@ -193,6 +198,29 @@ public final class GrappleManager {
         boolean notMovingMeaningfully = player.getVelocity().lengthSquared() < HookshotConfig.GRAPPLE_STUCK_MAX_SPEED * HookshotConfig.GRAPPLE_STUCK_MAX_SPEED;
 
         if (barelyMovedTowardAnchor && notMovingMeaningfully) {
+            state.setStuckTicks(state.getStuckTicks() + 1);
+        } else {
+            state.setStuckTicks(0);
+        }
+
+        return state.getStuckTicks() >= HookshotConfig.GRAPPLE_STUCK_TICKS;
+    }
+
+    private static boolean isEntityStuck(ServerPlayerEntity player, Entity target, GrappleState state) {
+        double distance = target.getPos().distanceTo(player.getPos());
+        double lastDistance = state.getLastDistanceToAnchor();
+        state.setLastDistanceToAnchor(distance);
+
+        if (lastDistance < 0.0D) {
+            state.setStuckTicks(0);
+            return false;
+        }
+
+        double progress = lastDistance - distance;
+        boolean barelyMovedTowardPlayer = progress < HookshotConfig.GRAPPLE_MIN_PROGRESS_PER_TICK;
+        boolean notMovingMeaningfully = target.getVelocity().lengthSquared() < HookshotConfig.GRAPPLE_STUCK_MAX_SPEED * HookshotConfig.GRAPPLE_STUCK_MAX_SPEED;
+
+        if (barelyMovedTowardPlayer && notMovingMeaningfully) {
             state.setStuckTicks(state.getStuckTicks() + 1);
         } else {
             state.setStuckTicks(0);
@@ -248,6 +276,7 @@ public final class GrappleManager {
     private static boolean isHumanTypeTarget(Entity entity) {
         return entity instanceof VillagerEntity
                 || entity instanceof ArmorStandEntity
+                || entity instanceof CreeperEntity
                 || entity instanceof ZombieEntity
                 || entity instanceof ZombieVillagerEntity
                 || entity instanceof ZombifiedPiglinEntity

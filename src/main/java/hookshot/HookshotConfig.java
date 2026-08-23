@@ -7,6 +7,7 @@ public final class HookshotConfig {
     public static final double PULL_FORCE = 0.16D;
     public static final double ENTITY_PULL_FORCE = 0.18D;
     public static final double GROUNDED_PULL_FORCE = 0.12D;
+    public static final double ENTITY_GROUNDED_PULL_FORCE = 0.16D;
     public static final double MAX_SPEED = 1.8D;
     public static final double ENTITY_MAX_SPEED = 1.5D;
     public static final double GRAPPLE_GRAVITY_DAMPING = 0.10D;
