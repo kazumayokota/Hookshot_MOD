@@ -5,6 +5,7 @@ import net.minecraft.util.math.Vec3d;
 
 public final class GrappleState {
     private UUID hookUuid;
+    private UUID hookedEntityUuid;
     private Vec3d anchorPosition;
     private GrappleMode mode = GrappleMode.NONE;
     private int activeTicks;
@@ -19,6 +20,14 @@ public final class GrappleState {
 
     public void setHookUuid(UUID hookUuid) {
         this.hookUuid = hookUuid;
+    }
+
+    public UUID getHookedEntityUuid() {
+        return hookedEntityUuid;
+    }
+
+    public void setHookedEntityUuid(UUID hookedEntityUuid) {
+        this.hookedEntityUuid = hookedEntityUuid;
     }
 
     public Vec3d getAnchorPosition() {
