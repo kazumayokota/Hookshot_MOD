@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "id": "hookshot",
+  "version": "${version}",
+  "name": "Hookshot MOD",
+  "description": "Adds a hookshot weapon for fast movement and combat support.",
+  "authors": [
+    "ERR"
+  ],
+  "contact": {},
+  "license": "MIT",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "hookshot.HookshotMod"
+    ],
+    "client": [
+      "hookshot.HookshotClient"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.14.0",
+    "fabric-api": "*",
+    "minecraft": "~1.19.2",
+    "java": ">=17"
+  }
+}
