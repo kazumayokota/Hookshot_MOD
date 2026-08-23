@@ -9,6 +9,8 @@ public final class GrappleState {
     private GrappleMode mode = GrappleMode.NONE;
     private int activeTicks;
     private int fallProtectionTicks;
+    private int stuckTicks;
+    private double lastDistanceToAnchor = -1.0D;
     private boolean active;
 
     public UUID getHookUuid() {
@@ -49,6 +51,22 @@ public final class GrappleState {
 
     public void setFallProtectionTicks(int fallProtectionTicks) {
         this.fallProtectionTicks = fallProtectionTicks;
+    }
+
+    public int getStuckTicks() {
+        return stuckTicks;
+    }
+
+    public void setStuckTicks(int stuckTicks) {
+        this.stuckTicks = stuckTicks;
+    }
+
+    public double getLastDistanceToAnchor() {
+        return lastDistanceToAnchor;
+    }
+
+    public void setLastDistanceToAnchor(double lastDistanceToAnchor) {
+        this.lastDistanceToAnchor = lastDistanceToAnchor;
     }
 
     public boolean isActive() {

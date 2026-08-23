@@ -29,6 +29,8 @@ public final class GrappleManager {
         state.setAnchorPosition(anchorPosition);
         state.setMode(GrappleMode.PLAYER_PULL);
         state.setActiveTicks(0);
+        state.setStuckTicks(0);
+        state.setLastDistanceToAnchor(-1.0D);
         state.setActive(true);
     }
 
@@ -111,6 +113,10 @@ public final class GrappleManager {
                 return true;
             }
 
+            if (isStuck(player, state)) {
+                return true;
+            }
+
             if (isLookingAway(player, state.getAnchorPosition())) {
                 return true;
             }
@@ -132,6 +138,29 @@ public final class GrappleManager {
         return dot < minDot;
     }
 
+    private static boolean isStuck(ServerPlayerEntity player, GrappleState state) {
+        double distance = player.getPos().distanceTo(state.getAnchorPosition());
+        double lastDistance = state.getLastDistanceToAnchor();
+        state.setLastDistanceToAnchor(distance);
+
+        if (lastDistance < 0.0D) {
+            state.setStuckTicks(0);
+            return false;
+        }
+
+        double progress = lastDistance - distance;
+        boolean barelyMovedTowardAnchor = progress < HookshotConfig.GRAPPLE_MIN_PROGRESS_PER_TICK;
+        boolean nearlyStationary = player.getVelocity().horizontalLengthSquared() < 0.0025D;
+
+        if (barelyMovedTowardAnchor && nearlyStationary) {
+            state.setStuckTicks(state.getStuckTicks() + 1);
+        } else {
+            state.setStuckTicks(0);
+        }
+
+        return state.getStuckTicks() >= HookshotConfig.GRAPPLE_STUCK_TICKS;
+    }
+
     private static void release(ServerPlayerEntity player, GrappleState state) {
         if (state.getHookUuid() != null && player.world instanceof ServerWorld serverWorld) {
             Entity hook = serverWorld.getEntity(state.getHookUuid());
@@ -146,6 +175,8 @@ public final class GrappleManager {
         state.setHookUuid(null);
         state.setAnchorPosition(null);
         state.setActiveTicks(0);
+        state.setStuckTicks(0);
+        state.setLastDistanceToAnchor(-1.0D);
         state.setFallProtectionTicks(HookshotConfig.FALL_PROTECTION_TICKS);
     }
 }
