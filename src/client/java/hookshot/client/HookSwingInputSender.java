@@ -34,11 +34,13 @@ public final class HookSwingInputSender {
         boolean jumpPressed = client.options.jumpKey.isPressed();
         boolean jumpStarted = jumpPressed && !wasJumpPressed;
         wasJumpPressed = jumpPressed;
+        boolean sneakPressed = client.options.sneakKey.isPressed();
 
         PacketByteBuf buf = PacketByteBufs.create();
         buf.writeDouble(sidewaysInput);
         buf.writeBoolean(jumpStarted);
         buf.writeBoolean(jumpPressed);
+        buf.writeBoolean(sneakPressed);
         ClientPlayNetworking.send(SwingInputTracker.SWING_INPUT_PACKET_ID, buf);
     }
 }

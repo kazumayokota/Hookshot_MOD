@@ -28,6 +28,7 @@ public final class SwingPhysics {
         Vec3d nextVelocity = velocity;
         double sidewaysInput = SwingInputTracker.getSidewaysInput(player);
         boolean jumpHeld = SwingInputTracker.isJumpHeld(player);
+        boolean sneakHeld = SwingInputTracker.isSneakHeld(player);
 
         if (Math.abs(sidewaysInput) > INPUT_DEAD_ZONE) {
             nextVelocity = nextVelocity.add(tangent.multiply(sidewaysInput * HookshotConfig.SIDE_FORCE * distanceScale));
@@ -45,6 +46,8 @@ public final class SwingPhysics {
             nextVelocity = nextVelocity.add(swingDirection.multiply(HookshotConfig.JUMP_SWING_FORCE * distanceScale));
         }
 
+        nextVelocity = applyVerticalControl(nextVelocity, jumpHeld, sneakHeld);
+
         if (SwingInputTracker.consumeJumpPressed(player)) {
             nextVelocity = applyJump(player, radial, tangent, nextVelocity, distanceScale);
         }
@@ -58,6 +61,10 @@ public final class SwingPhysics {
         }
 
         if (SwingInputTracker.isJumpHeld(player)) {
+            return true;
+        }
+
+        if (SwingInputTracker.isSneakHeld(player)) {
             return true;
         }
 
@@ -79,6 +86,22 @@ public final class SwingPhysics {
 
     private static Vec3d getTangentialVelocity(Vec3d velocity, Vec3d radial) {
         return velocity.subtract(radial.multiply(velocity.dotProduct(radial)));
+    }
+
+    private static Vec3d applyVerticalControl(Vec3d velocity, boolean jumpHeld, boolean sneakHeld) {
+        double verticalInput = 0.0D;
+        if (jumpHeld) {
+            verticalInput += 1.0D;
+        }
+        if (sneakHeld) {
+            verticalInput -= 1.0D;
+        }
+
+        if (Math.abs(verticalInput) < 1.0E-7D) {
+            return velocity;
+        }
+
+        return velocity.add(UP.multiply(verticalInput * HookshotConfig.VERTICAL_CONTROL_FORCE));
     }
 
     private static Vec3d applyJump(ServerPlayerEntity player, Vec3d radial, Vec3d tangent, Vec3d velocity, double distanceScale) {

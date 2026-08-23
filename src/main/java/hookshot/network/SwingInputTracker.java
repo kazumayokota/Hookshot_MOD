@@ -21,7 +21,8 @@ public final class SwingInputTracker {
             double sidewaysInput = buf.readDouble();
             boolean jumpPressed = buf.readBoolean();
             boolean jumpHeld = buf.readBoolean();
-            server.execute(() -> setInput(player, sidewaysInput, jumpPressed, jumpHeld));
+            boolean sneakHeld = buf.readBoolean();
+            server.execute(() -> setInput(player, sidewaysInput, jumpPressed, jumpHeld, sneakHeld));
         });
     }
 
@@ -35,7 +36,7 @@ public final class SwingInputTracker {
             return false;
         }
 
-        INPUTS.put(player.getUuid(), new SwingInput(input.sidewaysInput(), false, input.jumpHeld()));
+        INPUTS.put(player.getUuid(), new SwingInput(input.sidewaysInput(), false, input.jumpHeld(), input.sneakHeld()));
         return true;
     }
 
@@ -43,17 +44,21 @@ public final class SwingInputTracker {
         return INPUTS.getOrDefault(player.getUuid(), SwingInput.NONE).jumpHeld();
     }
 
+    public static boolean isSneakHeld(ServerPlayerEntity player) {
+        return INPUTS.getOrDefault(player.getUuid(), SwingInput.NONE).sneakHeld();
+    }
+
     public static void clear(ServerPlayerEntity player) {
         INPUTS.remove(player.getUuid());
     }
 
-    private static void setInput(ServerPlayerEntity player, double sidewaysInput, boolean jumpPressed, boolean jumpHeld) {
+    private static void setInput(ServerPlayerEntity player, double sidewaysInput, boolean jumpPressed, boolean jumpHeld, boolean sneakHeld) {
         SwingInput existing = INPUTS.getOrDefault(player.getUuid(), SwingInput.NONE);
         double clampedSidewaysInput = Math.max(-1.0D, Math.min(1.0D, sidewaysInput));
-        INPUTS.put(player.getUuid(), new SwingInput(clampedSidewaysInput, jumpPressed || existing.jumpPressed(), jumpHeld));
+        INPUTS.put(player.getUuid(), new SwingInput(clampedSidewaysInput, jumpPressed || existing.jumpPressed(), jumpHeld, sneakHeld));
     }
 
-    private record SwingInput(double sidewaysInput, boolean jumpPressed, boolean jumpHeld) {
-        private static final SwingInput NONE = new SwingInput(0.0D, false, false);
+    private record SwingInput(double sidewaysInput, boolean jumpPressed, boolean jumpHeld, boolean sneakHeld) {
+        private static final SwingInput NONE = new SwingInput(0.0D, false, false, false);
     }
 }

@@ -11,6 +11,7 @@ public final class HookshotConfig {
     public static final double SIDE_FORCE = 0.04D;
     public static final double LOOK_SWING_FORCE = 0.035D;
     public static final double JUMP_SWING_FORCE = 0.09D;
+    public static final double VERTICAL_CONTROL_FORCE = 0.08D;
     public static final double SWING_JUMP_FORCE = 0.32D;
     public static final double SWING_JUMP_TANGENTIAL_BOOST = 0.18D;
     public static final double MAX_SPEED = 1.8D;
