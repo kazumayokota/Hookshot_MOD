@@ -8,7 +8,6 @@ import net.minecraft.client.render.entity.EntityRenderer;
 import net.minecraft.client.render.entity.EntityRendererFactory;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Matrix3f;
 import net.minecraft.util.math.Matrix4f;
 import net.minecraft.util.math.Vec3d;
@@ -27,7 +26,7 @@ public final class HookProjectileRenderer extends EntityRenderer<HookProjectileE
     public void render(HookProjectileEntity entity, float yaw, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light) {
         HookRopeRenderer.render(entity, tickDelta, matrices, vertexConsumers, light);
 
-        Vec3d forward = getForwardVector(entity, tickDelta);
+        Vec3d forward = entity.getAimDirection();
         Vec3d up = getPerpendicular(forward);
         Vec3d side = forward.crossProduct(up).normalize();
         VertexConsumer vertexConsumer = vertexConsumers.getBuffer(RenderLayer.getLines());
@@ -51,19 +50,6 @@ public final class HookProjectileRenderer extends EntityRenderer<HookProjectileE
     @Override
     public Identifier getTexture(HookProjectileEntity entity) {
         return TEXTURE;
-    }
-
-    private static Vec3d getForwardVector(HookProjectileEntity entity, float tickDelta) {
-        Vec3d velocity = entity.getVelocity();
-
-        if (velocity.lengthSquared() > 1.0E-7D) {
-            return velocity.normalize();
-        }
-
-        float yaw = MathHelper.lerp(tickDelta, entity.prevYaw, entity.getYaw()) * MathHelper.RADIANS_PER_DEGREE;
-        float pitch = MathHelper.lerp(tickDelta, entity.prevPitch, entity.getPitch()) * MathHelper.RADIANS_PER_DEGREE;
-        float horizontal = MathHelper.cos(pitch);
-        return new Vec3d(-MathHelper.sin(yaw) * horizontal, -MathHelper.sin(pitch), MathHelper.cos(yaw) * horizontal).normalize();
     }
 
     private static Vec3d getPerpendicular(Vec3d forward) {

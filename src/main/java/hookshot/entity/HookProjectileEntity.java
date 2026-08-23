@@ -27,6 +27,9 @@ import net.minecraft.world.World;
 
 public final class HookProjectileEntity extends Entity {
     private static final TrackedData<Integer> HOOK_STATE = DataTracker.registerData(HookProjectileEntity.class, TrackedDataHandlerRegistry.INTEGER);
+    private static final TrackedData<Float> AIM_X = DataTracker.registerData(HookProjectileEntity.class, TrackedDataHandlerRegistry.FLOAT);
+    private static final TrackedData<Float> AIM_Y = DataTracker.registerData(HookProjectileEntity.class, TrackedDataHandlerRegistry.FLOAT);
+    private static final TrackedData<Float> AIM_Z = DataTracker.registerData(HookProjectileEntity.class, TrackedDataHandlerRegistry.FLOAT);
     private static final double SPEED = 3.2D;
     private static final int ATTACHED_LIFETIME_TICKS = 60;
     private static final double START_OFFSET = 0.25D;
@@ -53,6 +56,7 @@ public final class HookProjectileEntity extends Entity {
         Vec3d start = owner.getEyePos().add(direction.multiply(START_OFFSET));
 
         refreshPositionAndAngles(start.x, start.y, start.z, getYaw(direction), getPitch(direction));
+        setAimDirection(direction);
         setVelocity(direction.multiply(SPEED));
         setRotationFromDirection(direction);
     }
@@ -81,6 +85,9 @@ public final class HookProjectileEntity extends Entity {
     @Override
     protected void initDataTracker() {
         dataTracker.startTracking(HOOK_STATE, HookState.FLYING.ordinal());
+        dataTracker.startTracking(AIM_X, 0.0F);
+        dataTracker.startTracking(AIM_Y, 0.0F);
+        dataTracker.startTracking(AIM_Z, 1.0F);
     }
 
     @Override
@@ -93,7 +100,8 @@ public final class HookProjectileEntity extends Entity {
         }
 
         Vec3d start = getPos();
-        Vec3d velocity = getVelocity();
+        Vec3d velocity = getAimDirection().multiply(SPEED);
+        setVelocity(velocity);
         Vec3d end = start.add(velocity);
         HitResult hitResult = getCollision(start, end);
 
@@ -103,7 +111,7 @@ public final class HookProjectileEntity extends Entity {
 
         move(MovementType.SELF, end.subtract(start));
         traveledDistance += start.distanceTo(getPos());
-        setRotationFromDirection(getVelocity());
+        setRotationFromDirection(getAimDirection());
 
         if (hitResult.getType() != HitResult.Type.MISS) {
             onCollision(hitResult);
@@ -124,7 +132,7 @@ public final class HookProjectileEntity extends Entity {
                 this));
 
         Vec3d collisionEnd = blockHit.getType() == HitResult.Type.MISS ? end : blockHit.getPos();
-        Box searchBox = getBoundingBox().stretch(getVelocity()).expand(1.0D);
+        Box searchBox = getBoundingBox().stretch(getAimDirection().multiply(SPEED)).expand(1.0D);
         EntityHitResult entityHit = ProjectileUtil.getEntityCollision(
                 world,
                 this,
@@ -155,7 +163,7 @@ public final class HookProjectileEntity extends Entity {
 
     private void onEntityHit(EntityHitResult hitResult) {
         setHookState(HookState.ATTACHED_ENTITY);
-        setRotationFromDirection(getVelocity());
+        setRotationFromDirection(getAimDirection());
         setVelocity(Vec3d.ZERO);
         setPosition(hitResult.getPos());
         playSound(SoundEvents.ENTITY_ARROW_HIT, 1.0F, 1.2F);
@@ -163,7 +171,7 @@ public final class HookProjectileEntity extends Entity {
 
     private void onBlockHit(BlockHitResult hitResult) {
         setHookState(HookState.ATTACHED_BLOCK);
-        setRotationFromDirection(getVelocity());
+        setRotationFromDirection(getAimDirection());
         setVelocity(Vec3d.ZERO);
 
         Vec3d normal = Vec3d.of(hitResult.getSide().getVector());
@@ -187,6 +195,23 @@ public final class HookProjectileEntity extends Entity {
 
     private void setHookState(HookState state) {
         dataTracker.set(HOOK_STATE, state.ordinal());
+    }
+
+    public Vec3d getAimDirection() {
+        Vec3d direction = new Vec3d(dataTracker.get(AIM_X), dataTracker.get(AIM_Y), dataTracker.get(AIM_Z));
+
+        if (direction.lengthSquared() < 1.0E-7D) {
+            return new Vec3d(0.0D, 0.0D, 1.0D);
+        }
+
+        return direction.normalize();
+    }
+
+    private void setAimDirection(Vec3d direction) {
+        Vec3d normalized = direction.normalize();
+        dataTracker.set(AIM_X, (float) normalized.x);
+        dataTracker.set(AIM_Y, (float) normalized.y);
+        dataTracker.set(AIM_Z, (float) normalized.z);
     }
 
     private void setRotationFromDirection(Vec3d direction) {
@@ -219,6 +244,7 @@ public final class HookProjectileEntity extends Entity {
         ownerUuid = nbt.containsUuid("Owner") ? nbt.getUuid("Owner") : null;
         attachedTicks = nbt.getInt("AttachedTicks");
         traveledDistance = nbt.getDouble("TraveledDistance");
+        setAimDirection(new Vec3d(nbt.getDouble("AimX"), nbt.getDouble("AimY"), nbt.getDouble("AimZ")));
     }
 
     @Override
@@ -227,6 +253,10 @@ public final class HookProjectileEntity extends Entity {
         Optional.ofNullable(ownerUuid).ifPresent(uuid -> nbt.putUuid("Owner", uuid));
         nbt.putInt("AttachedTicks", attachedTicks);
         nbt.putDouble("TraveledDistance", traveledDistance);
+        Vec3d direction = getAimDirection();
+        nbt.putDouble("AimX", direction.x);
+        nbt.putDouble("AimY", direction.y);
+        nbt.putDouble("AimZ", direction.z);
     }
 
     private static HookState readState(String value) {
@@ -246,7 +276,6 @@ public final class HookProjectileEntity extends Entity {
     public void onSpawnPacket(EntitySpawnS2CPacket packet) {
         super.onSpawnPacket(packet);
         ownerEntityId = packet.getEntityData();
-        setVelocity(packet.getVelocityX(), packet.getVelocityY(), packet.getVelocityZ());
-        setRotationFromDirection(getVelocity());
+        setRotationFromDirection(getAimDirection());
     }
 }
