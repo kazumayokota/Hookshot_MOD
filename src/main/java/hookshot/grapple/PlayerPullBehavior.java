@@ -16,7 +16,8 @@ public final class PlayerPullBehavior {
         }
 
         Vec3d pullDirection = toAnchor.normalize();
-        Vec3d nextVelocity = player.getVelocity().add(pullDirection.multiply(HookshotConfig.PULL_FORCE));
+        Vec3d currentVelocity = dampGravity(player.getVelocity());
+        Vec3d nextVelocity = currentVelocity.add(pullDirection.multiply(HookshotConfig.PULL_FORCE));
 
         if (nextVelocity.length() > HookshotConfig.MAX_SPEED) {
             nextVelocity = nextVelocity.normalize().multiply(HookshotConfig.MAX_SPEED);
@@ -25,6 +26,15 @@ public final class PlayerPullBehavior {
         player.setVelocity(nextVelocity);
         player.velocityModified = true;
         player.fallDistance = 0.0F;
+    }
+
+    private static Vec3d dampGravity(Vec3d velocity) {
+        if (velocity.y >= 0.0D) {
+            return velocity;
+        }
+
+        double dampedY = velocity.y * HookshotConfig.GRAPPLE_GRAVITY_DAMPING;
+        return new Vec3d(velocity.x, Math.max(dampedY, HookshotConfig.GRAPPLE_MAX_DOWNWARD_SPEED), velocity.z);
     }
 
     public static boolean isCloseEnough(ServerPlayerEntity player, Vec3d anchorPosition) {
