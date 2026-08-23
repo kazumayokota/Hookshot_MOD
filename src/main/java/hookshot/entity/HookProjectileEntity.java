@@ -233,15 +233,29 @@ public final class HookProjectileEntity extends Entity {
     }
 
     private void onBlockHit(BlockHitResult hitResult) {
+        Vec3d normal = Vec3d.of(hitResult.getSide().getVector());
+        Vec3d attachedPos = hitResult.getPos().add(normal.multiply(BLOCK_SURFACE_OFFSET));
+
+        if (isTooCloseToOwner(attachedPos)) {
+            removeHook();
+            return;
+        }
+
         setHookState(HookState.ATTACHED_BLOCK);
         setRotationFromDirection(getAimDirection());
         setVelocity(Vec3d.ZERO);
-
-        Vec3d normal = Vec3d.of(hitResult.getSide().getVector());
-        Vec3d attachedPos = hitResult.getPos().add(normal.multiply(BLOCK_SURFACE_OFFSET));
         setPosition(attachedPos);
         startBlockGrapple(attachedPos);
         playSound(SoundEvents.ENTITY_ARROW_HIT, 1.0F, 1.0F);
+    }
+
+    private boolean isTooCloseToOwner(Vec3d position) {
+        Entity owner = getOwner();
+        if (!(owner instanceof ServerPlayerEntity player)) {
+            return false;
+        }
+
+        return player.getPos().squaredDistanceTo(position) <= HookshotConfig.GRAPPLE_RELEASE_DISTANCE * HookshotConfig.GRAPPLE_RELEASE_DISTANCE;
     }
 
     private void startBlockGrapple(Vec3d anchorPosition) {

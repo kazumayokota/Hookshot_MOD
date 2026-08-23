@@ -56,7 +56,9 @@ public final class HookArmPoseController {
         HookProjectileEntity candidate = null;
 
         for (Entity entity : client.world.getEntities()) {
-            if (!(entity instanceof HookProjectileEntity hook) || hook.getHookState() == HookState.REMOVED) {
+            if (!(entity instanceof HookProjectileEntity hook)
+                    || hook.getHookState() == HookState.REMOVED
+                    || hook.getHookState() == HookState.RETURNING) {
                 continue;
             }
 
