@@ -8,6 +8,8 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.network.PacketByteBuf;
 
 public final class HookSwingInputSender {
+    private static boolean wasJumpPressed;
+
     private HookSwingInputSender() {
     }
 
@@ -17,6 +19,7 @@ public final class HookSwingInputSender {
 
     private static void sendSwingInput(MinecraftClient client) {
         if (client.player == null || client.world == null) {
+            wasJumpPressed = false;
             return;
         }
 
@@ -28,8 +31,13 @@ public final class HookSwingInputSender {
             sidewaysInput += 1.0D;
         }
 
+        boolean jumpPressed = client.options.jumpKey.isPressed();
+        boolean jumpStarted = jumpPressed && !wasJumpPressed;
+        wasJumpPressed = jumpPressed;
+
         PacketByteBuf buf = PacketByteBufs.create();
         buf.writeDouble(sidewaysInput);
+        buf.writeBoolean(jumpStarted);
         ClientPlayNetworking.send(SwingInputTracker.SWING_INPUT_PACKET_ID, buf);
     }
 }

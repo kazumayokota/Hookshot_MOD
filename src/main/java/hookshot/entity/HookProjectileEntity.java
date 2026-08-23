@@ -44,6 +44,7 @@ public final class HookProjectileEntity extends Entity {
     private int ownerEntityId;
     private int attachedTicks;
     private double traveledDistance;
+    private boolean checkedInstantHit;
 
     public HookProjectileEntity(EntityType<? extends HookProjectileEntity> entityType, World world) {
         super(entityType, world);
@@ -125,6 +126,13 @@ public final class HookProjectileEntity extends Entity {
             return;
         }
 
+        if (!checkedInstantHit) {
+            checkedInstantHit = true;
+            if (tryInstantHit()) {
+                return;
+            }
+        }
+
         Vec3d start = getPos();
         Vec3d velocity = getAimDirection().multiply(SPEED);
         setVelocity(velocity);
@@ -158,7 +166,7 @@ public final class HookProjectileEntity extends Entity {
                 this));
 
         Vec3d collisionEnd = blockHit.getType() == HitResult.Type.MISS ? end : blockHit.getPos();
-        Box searchBox = getBoundingBox().stretch(getAimDirection().multiply(SPEED)).expand(1.0D);
+        Box searchBox = getBoundingBox().stretch(collisionEnd.subtract(start)).expand(1.0D);
         EntityHitResult entityHit = ProjectileUtil.getEntityCollision(
                 world,
                 this,
@@ -168,6 +176,32 @@ public final class HookProjectileEntity extends Entity {
                 entity -> entity.canHit() && !isOwner(entity));
 
         return entityHit != null ? entityHit : blockHit;
+    }
+
+    private boolean tryInstantHit() {
+        Entity owner = getOwner();
+        if (owner == null) {
+            return false;
+        }
+
+        Vec3d direction = getAimDirection();
+        Vec3d start = owner.getEyePos().add(direction.multiply(START_OFFSET));
+        Vec3d end = start.add(direction.multiply(HookshotConfig.MAX_RANGE));
+        HitResult hitResult = getCollision(start, end);
+
+        if (hitResult.getType() == HitResult.Type.MISS || start.distanceTo(hitResult.getPos()) <= HookshotConfig.INSTANT_HIT_DISTANCE) {
+            return false;
+        }
+
+        setPosition(hitResult.getPos());
+        traveledDistance = start.distanceTo(hitResult.getPos());
+        setRotationFromDirection(direction);
+
+        if (!world.isClient) {
+            onCollision(hitResult);
+        }
+
+        return true;
     }
 
     private boolean isOwner(Entity entity) {
@@ -364,6 +398,7 @@ public final class HookProjectileEntity extends Entity {
         attachedEntityUuid = nbt.containsUuid("AttachedEntity") ? nbt.getUuid("AttachedEntity") : null;
         attachedTicks = nbt.getInt("AttachedTicks");
         traveledDistance = nbt.getDouble("TraveledDistance");
+        checkedInstantHit = nbt.getBoolean("CheckedInstantHit");
         setAimDirection(new Vec3d(nbt.getDouble("AimX"), nbt.getDouble("AimY"), nbt.getDouble("AimZ")));
         setSourceHand(nbt.getBoolean("OffHand") ? Hand.OFF_HAND : Hand.MAIN_HAND);
     }
@@ -375,6 +410,7 @@ public final class HookProjectileEntity extends Entity {
         Optional.ofNullable(attachedEntityUuid).ifPresent(uuid -> nbt.putUuid("AttachedEntity", uuid));
         nbt.putInt("AttachedTicks", attachedTicks);
         nbt.putDouble("TraveledDistance", traveledDistance);
+        nbt.putBoolean("CheckedInstantHit", checkedInstantHit);
         Vec3d direction = getAimDirection();
         nbt.putDouble("AimX", direction.x);
         nbt.putDouble("AimY", direction.y);

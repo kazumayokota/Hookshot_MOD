@@ -38,6 +38,10 @@ public final class SwingPhysics {
             }
         }
 
+        if (SwingInputTracker.consumeJumpPressed(player)) {
+            nextVelocity = applyJump(player, radial, tangent, nextVelocity);
+        }
+
         return nextVelocity;
     }
 
@@ -64,6 +68,28 @@ public final class SwingPhysics {
 
     private static Vec3d getTangentialVelocity(Vec3d velocity, Vec3d radial) {
         return velocity.subtract(radial.multiply(velocity.dotProduct(radial)));
+    }
+
+    private static Vec3d applyJump(ServerPlayerEntity player, Vec3d radial, Vec3d tangent, Vec3d velocity) {
+        Vec3d tangentialVelocity = getTangentialVelocity(velocity, radial);
+        Vec3d boostDirection = tangentialVelocity.lengthSquared() >= 1.0E-7D
+                ? tangentialVelocity.normalize()
+                : getLookBasedTangent(player, radial, tangent);
+
+        return velocity
+                .add(UP.multiply(HookshotConfig.SWING_JUMP_FORCE))
+                .add(boostDirection.multiply(HookshotConfig.SWING_JUMP_TANGENTIAL_BOOST));
+    }
+
+    private static Vec3d getLookBasedTangent(ServerPlayerEntity player, Vec3d radial, Vec3d fallbackTangent) {
+        Vec3d look = player.getRotationVec(1.0F).normalize();
+        Vec3d lookTangent = look.subtract(radial.multiply(look.dotProduct(radial)));
+
+        if (lookTangent.lengthSquared() >= 1.0E-7D) {
+            return lookTangent.normalize();
+        }
+
+        return fallbackTangent;
     }
 
     private static boolean isLookingTowardAnchor(ServerPlayerEntity player, Vec3d radial) {
