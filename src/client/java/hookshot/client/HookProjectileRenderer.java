@@ -1,6 +1,7 @@
 package hookshot.client;
 
 import hookshot.entity.HookProjectileEntity;
+import hookshot.entity.HookState;
 import net.minecraft.client.render.OverlayTexture;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexConsumer;
@@ -30,7 +31,9 @@ public final class HookProjectileRenderer extends EntityRenderer<HookProjectileE
 
     @Override
     public void render(HookProjectileEntity entity, float yaw, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light) {
-        HookRopeRenderer.render(entity, tickDelta, matrices, vertexConsumers, light);
+        if (shouldRenderRope(entity)) {
+            HookRopeRenderer.render(entity, tickDelta, matrices, vertexConsumers, light);
+        }
 
         Vec3d forward = entity.getAimDirection();
         Vec3d up = getPerpendicular(forward);
@@ -45,6 +48,11 @@ public final class HookProjectileRenderer extends EntityRenderer<HookProjectileE
         renderBarbs(vertexConsumer, positionMatrix, normalMatrix, forward, up, side, light);
 
         super.render(entity, yaw, tickDelta, matrices, vertexConsumers, light);
+    }
+
+    private static boolean shouldRenderRope(HookProjectileEntity entity) {
+        HookState state = entity.getHookState();
+        return state == HookState.FLYING || state == HookState.ATTACHED_BLOCK || state == HookState.ATTACHED_ENTITY;
     }
 
     @Override
