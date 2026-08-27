@@ -119,20 +119,9 @@ Crossbow
 Unbreaking
 Mending
 Curse of Vanishing
-Flame
 ```
 
-### Flame
-
-フックがEntityへ命中した場合、対象を一定時間炎上させる。
-
-初期値：
-
-```text
-炎上時間：3秒
-```
-
-ブロック命中時には着火処理を行わない。
+Flameは弓・クロスボウの戦闘価値を損なわないため、Hookshotでは対応しない。
 
 ---
 
@@ -1441,9 +1430,6 @@ Hook地点を中心として、
 - [ ] Unbreaking
 - [ ] Mending
 - [ ] Curse of Vanishing
-- [ ] Flame
-- [ ] Flame Entity着火
-- [ ] Block非着火
 - [ ] 金床確認
 - [ ] エンチャントテーブル確認
 
@@ -1503,7 +1489,6 @@ Hook地点を中心として、
 - [ ] Miss Cooldown
 - [ ] 耐久値
 - [ ] Entity引力
-- [ ] Flame時間
 - [ ] 射程
 
 数値をコードへ直接散在させない。
