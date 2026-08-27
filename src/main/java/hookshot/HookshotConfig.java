@@ -29,6 +29,7 @@ public final class HookshotConfig {
     public static final double GRAPPLE_STUCK_MAX_SPEED = 0.18D;
     public static final double HOOK_RETURN_SPEED = 4.0D;
     public static final double HOOK_RETURN_FINISH_DISTANCE = 1.2D;
+    public static final int HOOK_RETURN_MAX_TICKS = 40;
     public static final double INSTANT_HIT_DISTANCE = 30.0D;
 
     private HookshotConfig() {

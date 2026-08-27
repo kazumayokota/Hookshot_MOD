@@ -43,6 +43,7 @@ public final class HookProjectileEntity extends Entity {
     private UUID attachedEntityUuid;
     private int ownerEntityId;
     private int attachedTicks;
+    private int returningTicks;
     private double traveledDistance;
     private boolean checkedInstantHit;
 
@@ -311,6 +312,14 @@ public final class HookProjectileEntity extends Entity {
     }
 
     private void tickReturning() {
+        returningTicks++;
+        if (returningTicks > HookshotConfig.HOOK_RETURN_MAX_TICKS) {
+            if (!world.isClient) {
+                removeHook();
+            }
+            return;
+        }
+
         Entity owner = getOwner();
 
         if (owner == null) {
@@ -358,6 +367,7 @@ public final class HookProjectileEntity extends Entity {
     private void startReturning() {
         setHookState(HookState.RETURNING);
         setVelocity(Vec3d.ZERO);
+        returningTicks = 0;
     }
 
     private void setHookState(HookState state) {
@@ -411,6 +421,7 @@ public final class HookProjectileEntity extends Entity {
         ownerUuid = nbt.containsUuid("Owner") ? nbt.getUuid("Owner") : null;
         attachedEntityUuid = nbt.containsUuid("AttachedEntity") ? nbt.getUuid("AttachedEntity") : null;
         attachedTicks = nbt.getInt("AttachedTicks");
+        returningTicks = nbt.getInt("ReturningTicks");
         traveledDistance = nbt.getDouble("TraveledDistance");
         checkedInstantHit = nbt.getBoolean("CheckedInstantHit");
         setAimDirection(new Vec3d(nbt.getDouble("AimX"), nbt.getDouble("AimY"), nbt.getDouble("AimZ")));
@@ -423,6 +434,7 @@ public final class HookProjectileEntity extends Entity {
         Optional.ofNullable(ownerUuid).ifPresent(uuid -> nbt.putUuid("Owner", uuid));
         Optional.ofNullable(attachedEntityUuid).ifPresent(uuid -> nbt.putUuid("AttachedEntity", uuid));
         nbt.putInt("AttachedTicks", attachedTicks);
+        nbt.putInt("ReturningTicks", returningTicks);
         nbt.putDouble("TraveledDistance", traveledDistance);
         nbt.putBoolean("CheckedInstantHit", checkedInstantHit);
         Vec3d direction = getAimDirection();
