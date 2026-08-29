@@ -26,6 +26,16 @@ public final class HookshotItem extends Item {
     }
 
     @Override
+    public boolean isEnchantable(ItemStack stack) {
+        return stack.isDamageable() && !stack.hasEnchantments();
+    }
+
+    @Override
+    public int getEnchantability() {
+        return 1;
+    }
+
+    @Override
     public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
         ItemStack stack = user.getStackInHand(hand);
 
