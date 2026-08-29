@@ -12,7 +12,7 @@
 | 想定環境 | Client / Server双方 |
 | 主用途 | フックショットによる高速移動・敵引き寄せ |
 | 開発方式 | AI支援によるフェーズ分割開発 |
-| 互換対象 | Better Combat / Simply Swords 等 |
+| 互換対象 | ~~Better Combat / Simply Swords 等~~ 他MODの挙動へ介入しない共存確認 |
 | 設計方針 | 単一責任・疎結合・サーバー権威型 |
 
 ---
@@ -30,7 +30,8 @@ Minecraftに、クロスボウをベースとしたフックショット武器�
 - ジャンプによるスイングジャンプ
 - Main Hand / Off Hand対応
 - 専用レティクル
-- Better Combatとの共存
+- ~~Better Combatとの共存~~
+- 他MODのモーション・入力・戦闘状態を壊さない共存
 
 を備えた、高い操作自由度を持つ移動・戦闘補助武器とする。
 
@@ -199,45 +200,56 @@ Off Hand時にはHookshotを手で握るのではなく、
 
 ---
 
-# 9. Better Combatとの競合防止
+# 9. ~~Better Combatとの競合防止~~ 他MODとの共存方針
 
-Better Combatによる両手武器使用中にHookshotを発動した場合、
+~~Better Combatによる両手武器使用中にHookshotを発動した場合、~~
 
-Hookshot操作を優先する。
+~~Hookshot操作を優先する。~~
 
-初期仕様：
+旧初期仕様：
 
-```text
-両手持ち状態
-    ↓
-Hookshot使用
-    ↓
-両手持ち動作を一時解除
-    ↓
-片手状態としてHookshotを実行
-```
+- ~~両手持ち状態~~
+- ~~Hookshot使用~~
+- ~~両手持ち動作を一時解除~~
+- ~~片手状態としてHookshotを実行~~
 
-Hookshot終了後については、Better Combat側の通常処理へ制御を戻す。
+~~Hookshot終了後については、Better Combat側の通常処理へ制御を戻す。~~
 
-Better Combat本体へ直接依存しない。
+~~Better Combat本体へ直接依存しない。~~
 
-構成：
+~~構成：~~
 
 ```text
 compat/
     BetterCombatCompat.java
 ```
 
-Better Combat導入時のみ互換処理を有効化する。
+~~Better Combat導入時のみ互換処理を有効化する。~~
 
 ```java
 FabricLoader.getInstance()
     .isModLoaded("bettercombat");
 ```
 
-などによって存在確認を行う。
+~~などによって存在確認を行う。~~
 
-Better Combatが存在しない環境でもHookshot MOD単体で起動可能とする。
+~~Better Combatが存在しない環境でもHookshot MOD単体で起動可能とする。~~
+
+上記のBetter Combat専用介入は対応しない。
+
+理由：
+
+- 他MODが提供する両手持ち武器・戦闘モーション・操作体験をHookshot側から破壊しないため
+- Hookshot MODは他MODの内部状態を制御しない方針とするため
+- 共存対応は「相手MODを操作する」のではなく、「Hookshot側が入力・描画・状態管理の衝突を避ける」ことを基本とするため
+
+今後の方針：
+
+- Better Combat / Simply Swords 等の専用制御は行わない
+- 両手持ち状態をHookshot側から解除しない
+- 他MODのモーションをHookshot側で上書きしない
+- Hookshotの描画・入力・Entity・物理処理はHookshot MOD内に閉じる
+- 互換確認は、同時導入時にHookshot側が相手MODの挙動を壊していないかを確認する
 
 ---
 
@@ -948,7 +960,7 @@ hookshot/
 ├── enchantment/
 │
 ├── compat/
-│   └── BetterCombatCompat.java
+│   └── ~~BetterCombatCompat.java~~
 │
 └── registry/
     ├── ModItems.java
@@ -1036,13 +1048,17 @@ EntityをPlayerへ移動
 
 ---
 
-## BetterCombatCompat
+## ~~BetterCombatCompat~~
 
 担当：
 
 ```text
 Better Combat互換処理のみ
 ```
+
+Better Combat専用互換処理は対応しない。
+
+他MODとの共存確認は、専用Compatクラスで相手MODを制御するのではなく、Hookshot側の入力・描画・状態管理が他MODを壊さないことを検証する。
 
 ---
 
@@ -1127,7 +1143,8 @@ AIには原則、
 - [x] Cooldown仕様決定
 - [x] 落下保護仕様決定
 - [x] Hand仕様決定
-- [x] Better Combat互換方針決定
+- [x] ~~Better Combat互換方針決定~~
+- [x] 他MODへ介入しない共存方針決定
 - [x] Client / Server責務決定
 - [x] パッケージ構成決定
 
@@ -1436,22 +1453,31 @@ Hook地点を中心として、
 ---
 
 # Phase 14
-## Better Combat互換
+## ~~Better Combat互換~~ MOD共存性確認
 
-基本機能完成後に実装する。
+~~基本機能完成後に実装する。~~
+
+Better Combat等への専用介入は対応しない。
+
+このPhaseでは、Hookshot MODが他MODのモーション・入力・戦闘状態を壊していないかを確認する。
 
 ### チェックリスト
 
-- [ ] Better Combat存在検出
-- [ ] Better Combatなし起動確認
-- [ ] Better Combatあり起動確認
-- [ ] Greatsword装備
-- [ ] Two-Hand状態検出
-- [ ] Hookshot発動時解除
-- [ ] One-Hand状態移行
-- [ ] Hook終了
-- [ ] Better Combatへ状態返却
-- [ ] Simply Swords確認
+- [ ] ~~Better Combat存在検出~~
+- [ ] ~~Better Combatなし起動確認~~
+- [ ] ~~Better Combatあり起動確認~~
+- [ ] ~~Greatsword装備~~
+- [ ] ~~Two-Hand状態検出~~
+- [ ] ~~Hookshot発動時解除~~
+- [ ] ~~One-Hand状態移行~~
+- [ ] ~~Hook終了~~
+- [ ] ~~Better Combatへ状態返却~~
+- [ ] ~~Simply Swords確認~~
+- [ ] Better Combat同時導入時にHookshotが相手MODの両手持ち状態を解除しない
+- [ ] Better Combat同時導入時にHookshotが相手MODの攻撃モーションを上書きしない
+- [ ] Simply Swords同時導入時にHookshotが相手MODの武器挙動を壊さない
+- [ ] Hookshot装備中・使用中のみHookshot側の描画/入力制御が動作する
+- [ ] 他MOD未導入環境でもHookshot MOD単体で起動可能
 
 ---
 
@@ -1536,8 +1562,8 @@ HookshotConfig
 ### MOD互換
 
 - [ ] Fabric API
-- [ ] Better Combat
-- [ ] Simply Swords
+- [ ] Better Combat共存確認
+- [ ] Simply Swords共存確認
 - [ ] Figura
 - [ ] Iris
 - [ ] Sodium
